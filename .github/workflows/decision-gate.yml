@@ -1,0 +1,22 @@
+name: Decision gate
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  decision-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: The pull request carries no needs-decision label
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          if jq -e 'index("needs-decision")' <<<"$LABELS" > /dev/null; then
+            echo "needs-decision is open: the pull request waits for the user's answer."
+            exit 1
+          fi

@@ -1,0 +1,4 @@
+title = "agent-core"
+
+[extend]
+useDefault = true
