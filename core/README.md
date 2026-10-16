@@ -14,6 +14,12 @@ after every merge to `main`, and a domain vendors that branch at
 | `templates/domain/` | the domain template `new-domain` copies | A5 |
 | `domain.py` | the manifest reader and the settings generator | G20 |
 
+Every part exists from the start, and `agent-core`'s
+`tests/test_core_layout.py` pins it. Until an item fills a directory of the
+table, the directory holds an empty `.gitkeep`, so that git tracks it; the
+item that fills it deletes the `.gitkeep`. `domain.py` stays empty until G20
+fills it.
+
 The `core-probe` skill, worker, and workflow prove that a linked core unit
 loads. A1 removes them once the core holds its first real skills.
 

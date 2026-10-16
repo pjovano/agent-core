@@ -34,7 +34,8 @@ class Git:
         try:
             return self._completed(arguments).stdout.strip()
         except subprocess.CalledProcessError as error:
-            raise RuntimeError(f"git {' '.join(arguments)} failed in {self._directory}: {error.stderr.strip()}") from error
+            command = f"git {' '.join(arguments)}"
+            raise RuntimeError(f"{command} failed in {self._directory}: {error.stderr.strip()}") from error
 
     def _completed(self, arguments: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
         return subprocess.run(["git", *arguments], cwd=self._directory, env=isolated_environment(),
