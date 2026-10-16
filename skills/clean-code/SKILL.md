@@ -9,7 +9,7 @@ This skill shapes how you write code. Every piece of code you produce follows th
 
 **Scope of a change.** New code meets the standard in full. When modifying existing code, bring every function you touch up to the standard. Do not refactor beyond the functions you touch unless asked; report what you noticed instead.
 
-**The domain's overlay.** If `.claude/code-overlay.md` exists, read it whole after this file. If a rule of the overlay contradicts a rule of this file, the overlay's rule wins.
+**The domain's code overlay.** If `.claude/code-overlay.md` exists, read it whole after this file. If a rule of the code overlay contradicts a rule of this file, the code overlay's rule wins.
 
 ## Names
 
