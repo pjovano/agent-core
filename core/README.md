@@ -6,7 +6,7 @@ after every merge to `main`, and a domain vendors that branch at
 
 | Part | Holds | Filled by |
 | --- | --- | --- |
-| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe` now; `clean-code` and `clean-prose` in A1 |
+| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe` and `review-pr` now; `clean-code` and `clean-prose` in A1 |
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
 | `audit/` | the control-plane audit engine | A2 |
