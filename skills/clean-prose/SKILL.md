@@ -112,10 +112,10 @@ in its place.
 | Recent section | the `## Recent` section of the user file, which holds the recent entries | log, journal, short-term memory |
 | recent entry | one line of the Recent section, opening with its date as `YYYY-MM-DD` | note (for a recent entry), log line, memory (for a recent entry) |
 | sorting test | the test `remember` applies to each learned item: an item that would still hold for another person using the domain is a rule, and a rule NEVER enters the user file | boundary check, memory filter, triage |
-| STE rule | one limit of §14 on instruction text, counted as §15 states | style rule, plain-language rule, writing guideline |
+| STE rule | one row of §14's table: a property of instruction text and the limit §14 sets on it, counted as §15 states | style rule, plain-language rule, writing guideline |
 | adoption ratchet | §13's rule that the STE rules bind the text a change writes, and that older text keeps its findings until a change touches it | grandfathering, legacy exemption, grace rule |
 | technical name | a term of the Vocabulary or of the domain's glossary, which the STE rules count as one word | glossary term, defined term, jargon |
-| force word | one of §2's words: MUST, ALWAYS, NEVER, SHOULD, MAY, PREFER | modal, keyword (for a force word), strength word |
+| force word | one of §2's words: MUST, ALWAYS, NEVER, SHOULD, MAY, PREFER | modal (for a force word), keyword (for a force word), strength word |
 | main clause | a clause that could stand as a sentence on its own; §15 states where one ends | independent clause, sentence (for a main clause) |
 | noun cluster | a run of nouns with no other word between them | noun stack, noun string, compound (for a noun cluster) |
 
@@ -150,10 +150,12 @@ findable without reading the paragraph:
 
 **Break a paragraph at its joints.** One paragraph carries one unit of the
 argument; where the text turns to the next unit, break. If a paragraph passes
-140 words, look for a joint. Length alone NEVER forces a break, and NEVER merge
-two units to balance length. An enumeration breaks between its items and NEVER
-inside one; if its items run about a line each, the list stays one paragraph at
-any length. Per Scope, this rule binds domain content as well.
+140 words, look for a joint. Unless §14's paragraph limit binds the paragraph,
+length alone NEVER forces a break. NEVER merge two units to balance length.
+
+**An enumeration breaks between its items and NEVER inside one.** If its items
+run about a line each, the list stays one paragraph at any length. Per Scope,
+§6's paragraph rules bind domain content as well.
 
 ## 7. Economy
 
@@ -270,9 +272,8 @@ reply: the soul file and §9 govern chat. NEVER apply them to domain content.
 merge that adds this section to the core. If a change writes or changes a
 sentence, that sentence and its paragraph MUST meet every STE rule. A
 sentence older than adoption keeps its findings until a change touches it.
-The audit holds each such finding as acknowledged.
 
-## 14. The STE limits
+## 14. The STE rules and their limits
 
 | STE rule | Limit |
 | --- | --- |
@@ -281,16 +282,13 @@ The audit holds each such finding as acknowledged.
 | Active voice for actions | a Command or a Conditional carries no passive verb |
 | Noun clusters | a noun cluster holds at most three nouns; a technical name or a code span counts as one noun |
 | Paragraph length | a paragraph holds at most six sentences; a sequence of actions stands as numbered steps, never as a paragraph |
-| One topic per paragraph | a paragraph holds one rule and the detail of that rule; no count measures this limit |
+| One topic per paragraph | a paragraph holds one rule and the detail of that rule; no count measures this STE rule |
 | Condition before action | §1's Condition first |
 
-**The paragraph limit overrides §6 in instruction text.** If a paragraph
-passes six sentences, break it at a joint, per §6. In domain content, §6
-alone governs the length of a paragraph.
-
-**Meet a limit by restating the text.** If a sentence passes its limit,
-split it at a clause. NEVER cut a guarding clause (§8) to meet a limit: a
-reader who misses its reason reverts the rule. Rewrite a passive verb with
+**Meet an STE rule by restating the text.** If a sentence passes its word
+limit, split it at a clause. If a paragraph passes six sentences, break it
+at a joint, per §6. NEVER cut a guarding rationale (§8) to meet an STE rule:
+a reader who misses its reason reverts the rule. Rewrite a passive verb with
 its actor as the subject. Break a longer noun cluster with a preposition or
 a relative clause.
 
@@ -316,10 +314,8 @@ of a table cell ends a sentence. A heading is no sentence.
 **A paragraph is a run of prose lines between blank lines.** A list, a table,
 a heading, and a fenced block are no paragraph.
 
-**A sentence that carries an imperative or a force word takes the 20-word
-limit.** Every other sentence takes the 25-word limit. A table cell's words
-meet the limit of the form its row takes. If a row states no rule, its cells
-take the 25-word limit.
+**A table cell's words meet the word limit of the form its row takes.** If
+a row states no rule, its cells take the word limit of a Definition.
 
 **An imperative is a main clause that opens with a bare verb.** A force word
 and the verb it governs are one instruction. A main clause ends at a
