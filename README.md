@@ -7,7 +7,8 @@ Two parts in one repository:
   `vendor/agent-core/` with `git subtree add --squash`, then moves to a newer
   core with `git subtree pull --squash`.
 - The root holds the dispatcher: its contract (`AGENTS.md`, imported by
-  `CLAUDE.md`), its `.claude/` settings, the tests, and CI.
+  `CLAUDE.md`), its `.claude/` settings, the Remote Control job
+  (`bin/remote_control.py`), the tests, and CI.
 
 A domain links each core skill, worker, and workflow it uses into its own
 `.claude/` with a relative symlink into `vendor/agent-core/`.

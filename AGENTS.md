@@ -10,7 +10,7 @@ The repository holds two parts.
 | Part | Path | Is |
 | --- | --- | --- |
 | core | `core/` | what every domain carries: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/`, `templates/domain/`, `domain.py`; `core/README.md` names the parts still empty |
-| dispatcher | the root | this contract, `CLAUDE.md`, `.claude/`, `tests/`, `pyproject.toml`, `.gitleaks.toml`, and `.github/` |
+| dispatcher | the root | this contract, `CLAUDE.md`, `.claude/`, `bin/`, `tests/`, `pyproject.toml`, `.gitleaks.toml`, and `.github/`; `bin/remote_control.py` installs the Remote Control job, which no domain carries |
 | branch `core` | — | `core/` alone, split from `main` by CI after every merge; every domain vendors it at `vendor/agent-core/` with `git subtree` |
 
 ## 2. Rules of the layout
