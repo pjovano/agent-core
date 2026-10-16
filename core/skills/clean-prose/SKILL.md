@@ -21,9 +21,8 @@ Applies to the repository's contract, every `SKILL.md`, every set of worker
 instructions, and every reference file a skill loads. §9 applies it to the
 orchestrator's explanation of its own work in chat.
 
-Does not apply to domain content: what a domain writes for the user to read,
-and the user's own writing, as the domain's glossary names them. One exception
-binds: §6's paragraph rule applies to domain content too.
+Does not apply to domain content. One exception binds: §6's paragraph rule
+applies to domain content too.
 
 ## 1. Every sentence has a form
 
@@ -103,6 +102,10 @@ in its place.
 | vendored core | `vendor/agent-core/`, the core as `git subtree` copies it from `agent-core`'s branch `core` | vendor copy, submodule, core checkout |
 | core unit | one skill, worker, or workflow of the core; a core skill, a core worker, and a core workflow are core units of those kinds | shared skill, imported skill, external skill |
 | symlink | a relative symbolic link under `.claude/` that resolves to a core unit inside the vendored core, or inside `core/` in `agent-core` itself | link (for a symlink), alias, shortcut |
+| domain | a repository that vendors the core at `vendor/agent-core/` and reaches each core unit it uses through a symlink | client repository, consumer, downstream repository |
+| code overlay | `.claude/code-overlay.md` in a domain: the domain's rules on code, which `clean-code` reads after its own text | overlay (for the code overlay), code rules file, clean-code addendum |
+| glossary | `.claude/glossary.md` in a domain: the domain's Vocabulary rows and its rules on instruction text, which `clean-prose` reads after its own text | overlay (for the glossary), prose overlay, vocabulary file |
+| domain content | what a domain writes for the user to read, and the user's own writing, as the domain's glossary names them | user content, output (for domain content) |
 
 Three exceptions bind: `subagent_type` is the Agent tool's literal parameter
 name and stays as written; a code or configuration identifier stays as
