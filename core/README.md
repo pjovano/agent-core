@@ -10,7 +10,7 @@ after every merge to `main`, and a domain vendors that branch at
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
 | `audit/` | the control-plane audit engine | A2 |
-| `lib/` | the agent-host port and its adapters | G19 |
+| `lib/` | `agent_core/`, the core's one Python package: the host ports `Scheduler`, `Notifier`, and `SystemReadings`, with their macOS adapters; the agent-host port and its adapters | the host ports now; the agent-host port in G19 |
 | `templates/domain/` | the domain template `new-domain` copies | A5 |
 | `domain.py` | the manifest reader and the settings generator | G20 |
 
