@@ -37,8 +37,8 @@ If an item fits more than one row, ask the user which row it takes.
 
 1. If `USER.md` is missing, create it at the domain's root from this skill's
    `skeleton.md`, unchanged.
-2. Write a Standing item as one `- <fact>` line under `## Standing`. If it
-   replaces an item already there, rewrite that line.
+2. Write a fact for the Standing section as one `- <fact>` line under
+   `## Standing`. If the fact replaces a line already there, rewrite that line.
 3. Write a recent entry as one `- YYYY-MM-DD — <fact>` line at the top of
    `## Recent`, dated the day the user stated it.
 4. If the user says an item no longer holds, delete its line.
@@ -47,11 +47,11 @@ If an item fits more than one row, ask the user which row it takes.
 
 On every write, read each recent entry's date.
 
-- If an entry is older than 30 days and the conversation shows it still
-  holds, move it to the Standing section without its date.
-- If an entry is older than 30 days and the conversation does not show that
-  it still holds, delete it.
-- Otherwise, leave the entry.
+- If a recent entry is older than 30 days and the conversation shows it
+  still holds, move it to the Standing section without its date.
+- If a recent entry is older than 30 days and the conversation does not show
+  that it still holds, delete it.
+- Otherwise, leave the recent entry.
 
 ## 4. Check the file
 
@@ -66,7 +66,8 @@ section does not open with a date.
 - If the check names an undated line, give the line its date from the
   conversation, or ask the user for it, and run the check again.
 - If the check reports the file past its cap, prune the Recent section, then
-  ask the user which Standing items to drop, and run the check again.
+  ask the user which lines of the Standing section to drop, and run the check
+  again.
 - If the check still fails, report its output to the user and stop.
 
 ## Guarantees

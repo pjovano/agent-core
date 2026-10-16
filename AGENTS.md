@@ -13,10 +13,9 @@ The repository holds two parts.
 | dispatcher | the root | this contract, `CLAUDE.md`, `.claude/`, `bin/`, `tests/`, `pyproject.toml`, `.gitleaks.toml`, and `.github/`; `bin/remote_control.py` installs the Remote Control job, which no domain carries |
 | branch `core` | — | `core/` alone, split from `main` by CI after every merge; every domain vendors it at `vendor/agent-core/` with `git subtree` |
 
-**`core/SOUL.md` binds every session.** The soul file is the standard of
-conduct every session keeps. `CLAUDE.md` holds two lines: `@AGENTS.md`, then
-`@core/SOUL.md`. If a host reads only this contract, read `core/SOUL.md`
-whole after it.
+**The soul file, `core/SOUL.md`, binds every session.** `CLAUDE.md` holds
+two lines: `@AGENTS.md`, then `@core/SOUL.md`. If a host reads only this
+contract, read `core/SOUL.md` whole after it.
 
 **The dispatcher keeps no `USER.md`.** It routes each request to a domain
 session, which holds the user file. NEVER create a `USER.md` in this

@@ -1,6 +1,6 @@
 ---
 name: clean-prose
-description: Enforces the prose standard on instruction text, which is AGENTS.md, SKILL.md files, worker instructions, and any reference file a skill loads. Use this skill before adding or editing any instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own work in chat. Not for domain content.
+description: Enforces the prose standard on instruction text, which is AGENTS.md, SOUL.md, SKILL.md files, worker instructions, and any reference file a skill loads. Use this skill before adding or editing any instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own work in chat. Not for domain content.
 ---
 
 # Clean Prose
@@ -17,8 +17,8 @@ the glossary's rule wins.
 
 ## Scope
 
-Applies to the repository's contract, every `SKILL.md`, every set of worker
-instructions, and every reference file a skill loads. §9 applies it to the
+Applies to the repository's contract, the soul file, every `SKILL.md`, every
+set of worker instructions, and every reference file a skill loads. §9 applies it to the
 orchestrator's explanation of its own work in chat.
 
 Does not apply to domain content. One exception binds: §6's paragraph rule
