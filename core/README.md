@@ -6,7 +6,8 @@ after every merge to `main`, and a domain vendors that branch at
 
 | Part | Holds | Filled by |
 | --- | --- | --- |
-| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, and `clean-prose`; `clean-code` reads a domain's `.claude/code-overlay.md`, and `clean-prose` its `.claude/glossary.md` |
+| `SOUL.md` | the soul file, which every `CLAUDE.md` imports | A6 |
+| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, and `remember`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, and `remember` keeps a domain's `USER.md` |
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
 | `audit/` | the control-plane audit engine | A2 |
@@ -26,3 +27,7 @@ removes them.
 
 This directory never holds an `AGENTS.md` or a `CLAUDE.md`: the dispatcher's
 contract stays at the repository root and never enters a domain.
+
+`SOUL.md` is no contract: it states conduct, never a repository's rules, and
+a domain imports it from `vendor/agent-core/SOUL.md`. It is instruction text,
+and `clean-prose` binds it.

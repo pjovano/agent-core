@@ -1,6 +1,6 @@
 ---
 name: clean-prose
-description: Enforces the prose standard on instruction text, which is AGENTS.md, SKILL.md files, worker instructions, and any reference file a skill loads. Use this skill before adding or editing any instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own work in chat. Not for domain content.
+description: Enforces the prose standard on instruction text, which is AGENTS.md, SOUL.md, SKILL.md files, worker instructions, and any reference file a skill loads. Use this skill before adding or editing any instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own work in chat. Not for domain content.
 ---
 
 # Clean Prose
@@ -17,8 +17,8 @@ the glossary's rule wins.
 
 ## Scope
 
-Applies to the repository's contract, every `SKILL.md`, every set of worker
-instructions, and every reference file a skill loads. §9 applies it to the
+Applies to the repository's contract, the soul file, every `SKILL.md`, every
+set of worker instructions, and every reference file a skill loads. §9 applies it to the
 orchestrator's explanation of its own work in chat.
 
 Does not apply to domain content. One exception binds: §6's paragraph rule
@@ -106,6 +106,12 @@ in its place.
 | code overlay | `.claude/code-overlay.md` in a domain: the domain's rules on code, which `clean-code` reads after its own text | overlay (for the code overlay), code rules file, clean-code addendum |
 | glossary | `.claude/glossary.md` in a domain: the domain's Vocabulary rows and its rules on instruction text, which `clean-prose` reads after its own text | overlay (for the glossary), prose overlay, vocabulary file |
 | domain content | what a domain writes for the user to read, and the user's own writing, as the domain's glossary names them | user content, output (for domain content) |
+| soul file | `SOUL.md` of the core, which the repository's `CLAUDE.md` imports: the standard of conduct every session that loads it keeps | persona, personality file, character file, system prompt (for the soul file) |
+| user file | `USER.md` at a domain's root, never versioned: what is true of the user now in that domain, which `remember` keeps | memory file, profile, user profile, preferences file |
+| Standing section | the `## Standing` section of the user file: what stays true of the user for months | permanent section, long-term memory, profile section |
+| Recent section | the `## Recent` section of the user file, which holds the recent entries | log, journal, short-term memory |
+| recent entry | one line of the Recent section, opening with its date as `YYYY-MM-DD` | note (for a recent entry), log line, memory (for a recent entry) |
+| sorting test | the test `remember` applies to each learned item: an item that would still hold for another person using the domain is a rule, and a rule NEVER enters the user file | boundary check, memory filter, triage |
 
 Three exceptions bind: `subagent_type` is the Agent tool's literal parameter
 name and stays as written; a code or configuration identifier stays as
@@ -205,19 +211,10 @@ state an action first and its reason afterwards.
 **Name the branch not taken.** When a rule branches, say which branch did not
 apply and why. A reader cannot audit a choice whose alternatives are invisible.
 
-**When an action fails, name the failure branch the instruction specifies.**
-NEVER improvise a recovery silently.
-
-**Mark judgment as judgment.** If no rule governs a choice, say so: "No rule
-covers this; choosing X because Y." NEVER present a preference as a
-requirement, and NEVER present a requirement as a preference.
-
-**When reversing a recommendation, name what changed:** the rule, the
-measurement, or the fact. A reversal with no stated cause is indistinguishable
-from noise.
-
-**Banned: narration that cites nothing.** *Let me go ahead and…*, *I'll just…*,
-*Now I'll…*. Each announces an action while withholding its reason.
+**The soul file binds every reply as well.** `SOUL.md` of the core states the
+rules of honesty, reporting, and voice that hold for any assistant; this
+section adds only the rules that tie an explanation to the instruction it
+follows.
 
 ## 10. Priority
 

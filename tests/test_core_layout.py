@@ -6,7 +6,7 @@ from _repository import REPOSITORY_ROOT
 
 CORE_DIR = REPOSITORY_ROOT / "core"
 CORE_DIRECTORIES = ("skills", "agents", "workflows", "audit", "lib", "templates/domain")
-CORE_FILES = ("domain.py",)
+CORE_FILES = ("SOUL.md", "domain.py")
 
 
 class CoreHoldsEveryPartOfItsLayout(unittest.TestCase):
