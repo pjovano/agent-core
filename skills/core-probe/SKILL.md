@@ -1,6 +1,6 @@
 ---
 name: core-probe
-description: Core probe — reply CORE-PROBE-SKILL-OK. Proves that a core skill loads through its symlink; invoke it only when asked to probe the core.
+description: Core probe — if asked to probe the core, invoke this skill. The skill replies CORE-PROBE-SKILL-OK, which proves that a core skill loads through its symlink.
 ---
 
 # Core probe
