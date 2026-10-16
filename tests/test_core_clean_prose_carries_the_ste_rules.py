@@ -29,9 +29,7 @@ LIMIT_OF_RULE = {
 COUNTING_RULES = (
     "| code span | one word |", "| technical name | one word, however many words it holds |",
     "| table cell | one word, in any count wider than the cell |",
-    "A table cell's words meet the limit of the form its row takes.",
-    "A sentence that carries an imperative or a force word takes the 20-word limit.",
-    "Every other sentence takes the 25-word limit.",
+    "A table cell's words meet the word limit of the form its row takes.",
 )
 RATCHET_RULES = (
     "If a change writes or changes a sentence, that sentence and its paragraph MUST meet every STE rule.",
@@ -39,12 +37,16 @@ RATCHET_RULES = (
 )
 SCOPE_RULES = ("**The STE rules bind instruction text alone.**", "NEVER apply them to a chat reply",
                "NEVER apply them to domain content.")
+PARAGRAPH_RULE_YIELDS = "Unless §14's paragraph limit binds the paragraph, length alone NEVER forces a break."
+PARAGRAPH_RULES_START = "**Break a paragraph at its joints.**"
+SENTENCE_WORD_LIMIT = re.compile(r"\b(?:20|25)[- ]words?\b")
 STE_TERMS = ("STE rule", "adoption ratchet", "technical name", "force word", "main clause", "noun cluster")
 SENTENCE_LIMIT = 25
 INSTRUCTION_LIMIT = 20
 PARAGRAPH_LIMIT = 6
 FORCE_WORD = re.compile(r"\b(MUST|ALWAYS|NEVER|SHOULD|MAY|PREFER)\b")
 CONDITION_OPENING = re.compile(r"^(If|Unless)\b")
+STATEMENT_OPENING = re.compile(r"^(?:[a-z§]|(?:A|An|The|Each|Every|No|Three)\b)")
 CLAUSE_END = re.compile(r";|:|, (?:and|or|but)\b")
 SECTION_HEADING = re.compile(r"^## (\d+)\. ", re.MULTILINE)
 VOCABULARY_ROW = re.compile(r"^\| ([^|]+?) \|", re.MULTILINE)
@@ -67,6 +69,10 @@ class CleanProse:
 
     def ste_sections(self) -> str:
         return self.raw[self._start_of(FIRST_STE_SECTION):]
+
+    def paragraph_rules(self) -> str:
+        start = self.raw.index(PARAGRAPH_RULES_START)
+        return self.raw[start:self._start_of(7)]
 
     def vocabulary_section(self) -> str:
         return self.raw[self._start_of(VOCABULARY_SECTION):self._start_of(VOCABULARY_SECTION + 1)]
@@ -95,8 +101,11 @@ class Sentence:
         return len(WORD.findall(counted))
 
     def limit(self) -> int:
+        return SENTENCE_LIMIT if self._is_definition_or_invariant() else INSTRUCTION_LIMIT
+
+    def _is_definition_or_invariant(self) -> bool:
         instructs = FORCE_WORD.search(self.text) or CONDITION_OPENING.match(self.text)
-        return INSTRUCTION_LIMIT if instructs else SENTENCE_LIMIT
+        return not instructs and bool(STATEMENT_OPENING.match(self.text))
 
     def force_words_in_one_main_clause(self) -> int:
         return max(len(FORCE_WORD.findall(clause)) for clause in CLAUSE_END.split(CODE_SPAN.sub("X", self.text)))
@@ -147,6 +156,13 @@ class TheStePassageStatesEachRule(unittest.TestCase):
     def test_chat_replies_and_domain_content_stay_out_of_scope(self) -> None:
         self.assertEqual([], [rule for rule in SCOPE_RULES if rule not in CleanProse().flat])
 
+    def test_only_the_limits_table_sets_a_sentence_word_limit(self) -> None:
+        self.assertEqual(["20 words"], SENTENCE_WORD_LIMIT.findall(CleanProse().raw))
+
+    def test_section_six_yields_paragraph_length_to_the_paragraph_limit(self) -> None:
+        skill = CleanProse()
+        self.assertEqual((True, False), (PARAGRAPH_RULE_YIELDS in skill.flat, "overrides §6" in skill.raw))
+
     def test_the_vocabulary_defines_each_term_the_ste_rules_fix(self) -> None:
         terms = set(VOCABULARY_ROW.findall(CleanProse().vocabulary_section()))
         self.assertEqual([], [term for term in STE_TERMS if term not in terms])
@@ -155,7 +171,7 @@ class TheStePassageStatesEachRule(unittest.TestCase):
 class TheStePassageMeetsItsOwnLimits(unittest.TestCase):
     def setUp(self) -> None:
         skill = CleanProse()
-        text = skill.ste_sections() + "\n\n" + skill.vocabulary_rows(STE_TERMS)
+        text = "\n\n".join((skill.paragraph_rules(), skill.ste_sections(), skill.vocabulary_rows(STE_TERMS)))
         self.passage = Passage(text, skill.technical_names())
 
     def test_each_sentence_meets_the_limit_of_its_form(self) -> None:
