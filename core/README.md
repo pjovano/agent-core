@@ -6,7 +6,7 @@ after every merge to `main`, and a domain vendors that branch at
 
 | Part | Holds | Filled by |
 | --- | --- | --- |
-| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe` and `review-pr` now; `clean-code` and `clean-prose` in A1 |
+| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, and `clean-prose`; `clean-code` reads a domain's `.claude/code-overlay.md`, and `clean-prose` its `.claude/glossary.md` |
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
 | `audit/` | the control-plane audit engine | A2 |
@@ -21,7 +21,8 @@ item that fills it deletes the `.gitkeep`. `domain.py` stays empty until G20
 fills it.
 
 The `core-probe` skill, worker, and workflow prove that a linked core unit
-loads. A1 removes them once the core holds its first real skills.
+loads. The item that gives the core its first real worker and workflow
+removes them.
 
 This directory never holds an `AGENTS.md` or a `CLAUDE.md`: the dispatcher's
 contract stays at the repository root and never enters a domain.
