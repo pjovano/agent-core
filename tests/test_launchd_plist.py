@@ -136,6 +136,10 @@ class TestRemovingAJob(SchedulerCase):
 
 
 class TestTheReadOnlyForms(SchedulerCase):
+    def test_the_location_is_the_plist_path_and_writes_nothing(self) -> None:
+        location = self.scheduler(FakeLaunchctl()).location(self.job)
+        self.assertEqual((str(self.plist), False), (location, self.plist_directory.exists()))
+
     def test_the_definition_is_the_plist_and_writes_nothing(self) -> None:
         definition = self.scheduler(FakeLaunchctl()).definition(self.job)
         self.assertEqual(LaunchdPlist(self.job).contents().decode(), definition)

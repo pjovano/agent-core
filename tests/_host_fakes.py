@@ -33,6 +33,9 @@ class FakeScheduler:
     def remove(self, job: Job) -> None:
         self._installed.discard(job.label)
 
+    def location(self, job: Job) -> str:
+        return f"jobs/{job.label}"
+
     def definition(self, job: Job) -> str:
         return repr(job)
 

@@ -129,6 +129,9 @@ class LaunchdScheduler:
         self._launchctl.bootout(job.label)
         self._agent(job).delete()
 
+    def location(self, job: Job) -> str:
+        return str(self._agent(job).path)
+
     def definition(self, job: Job) -> str:
         return self._agent(job).contents().decode()
 

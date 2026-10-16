@@ -46,13 +46,15 @@ class SchedulerContract:
         scheduler.remove(JOB)
         self.assertFalse(scheduler.installed(JOB))
 
-    def test_a_jobs_definition_and_manual_install_name_its_label(self) -> None:
+    def test_a_jobs_location_definition_and_manual_install_name_its_label(self) -> None:
         scheduler = self.scheduler()
+        self.assertIn(JOB.label, scheduler.location(JOB))
         self.assertIn(JOB.label, scheduler.definition(JOB))
         self.assertIn(JOB.label, scheduler.manual_install(JOB))
 
     def test_reading_a_definition_installs_nothing(self) -> None:
         scheduler = self.scheduler()
+        scheduler.location(JOB)
         scheduler.definition(JOB)
         scheduler.manual_install(JOB)
         self.assertFalse(scheduler.installed(JOB))
