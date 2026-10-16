@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: Pull request review — if asked to review a pull request, a branch, or a diff, invoke this skill, also when the request never says "review" ("anything wrong with this PR?", "what do you think of these changes?", "look over PR 12") or names a focus ("review PR 12 for security"). The skill prints its findings in the shell and posts nothing to GitHub.
-allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git status:*), Bash(git branch:*), Bash(git symbolic-ref:*), Bash(git fetch:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(gh auth status:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh repo view:*), mcp__github__list_pull_requests, mcp__github__pull_request_read
+allowed-tools: Read, Grep, Glob, AskUserQuestion, Bash(git status:*), Bash(git branch --show-current), Bash(git symbolic-ref --short refs/remotes/origin/HEAD), Bash(git fetch:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(gh auth status:*), Bash(gh pr list:*), Bash(gh pr view:*), Bash(gh repo view:*), mcp__github__list_pull_requests, mcp__github__pull_request_read
 ---
 
 # Review a pull request
@@ -45,9 +45,12 @@ and keep every other finding short.
 Read the change with git on a local checkout: `git diff -U10` gives wide
 context, and the files around the change are on disk. Use GitHub for
 read-only lookups alone: find the pull request, read its metadata, and read
-the feedback already on it. Use `gh` when it works. When `gh` is absent or
-unauthenticated, make the same lookups with the host's read-only GitHub
-tools, such as `list_pull_requests` and `pull_request_read`.
+the feedback already on it. Use `gh` when it works. A failed `gh` call is
+no answer: NEVER read it as "no pull request found". When `gh` is absent,
+unauthenticated, or refused (some hosts block GitHub's GraphQL API, which
+`gh pr` uses, and allow its REST API, which `gh api` uses), make the same
+lookups with the host's read-only GitHub tools, such as
+`list_pull_requests` and `pull_request_read`.
 
 1. **Find what to review.** A pull request number the user gives wins.
    Otherwise list the open pull requests whose head is the current branch:
@@ -92,8 +95,9 @@ tools, such as `list_pull_requests` and `pull_request_read`.
    only by `git subtree pull`: skip what a subtree pull brings, and flag any
    other change under `vendor/agent-core/`, since the domain's next subtree
    pull conflicts with it or overwrites it.
-5. **Read the feedback already on the pull request,** in its three places,
-   so the review never repeats it:
+5. **Read the feedback already on the pull request,** in its three places
+   (inline comments, review summaries, top-level comments), so the review
+   never repeats it:
    ```bash
    # inline review comments, each on a file and a line
    gh api repos/{owner}/{repo}/pulls/<number>/comments --jq '.[] | {path, line, body}'
