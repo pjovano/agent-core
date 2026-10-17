@@ -120,13 +120,14 @@ class DomainManifest:
     summary: str
     folders: tuple[Folder, ...]
     policy: Policy
+    vault: str | None
 
     @classmethod
     def read(cls, path: Path) -> DomainManifest:
-        fields = JsonFields(ManifestFile(path).values(), str(path))
+        fields = JsonFields(JsonFile(path).values(), str(path))
         folders = tuple(Folder.parsed(record) for record in fields.records("folders"))
         manifest = cls(path, fields.text("name"), fields.text("summary"), folders,
-                       Policy.parsed(fields.section("policy")))
+                       Policy.parsed(fields.section("policy")), fields.optional_text("vault"))
         manifest._check_consistency(fields)
         return manifest
 
@@ -142,13 +143,24 @@ class DomainManifest:
     def _check_consistency(self, fields: JsonFields) -> None:
         if len(self.folder_names()) != len(self.folders):
             raise fields.refuse("`folders` names one folder twice")
-        stray = self.policy.file_tool_folders() - {folder.name for folder in self.writable_folders()}
+        self._check_vault(fields)
+        self._check_file_tool_rules(fields)
+
+    def _check_vault(self, fields: JsonFields) -> None:
+        if self.vault is not None and self.vault not in self._writable_names():
+            raise fields.refuse(f"`vault` {self.vault!r} names no folder `folders` lists with `write` access")
+
+    def _check_file_tool_rules(self, fields: JsonFields) -> None:
+        stray = self.policy.file_tool_folders() - self._writable_names()
         if stray:
             raise fields.refuse(f"`policy.allow` grants the Edit or Write tool in {sorted(stray)}, "
                                 "which `folders` does not list as `write`")
 
+    def _writable_names(self) -> set[str]:
+        return {folder.name for folder in self.writable_folders()}
 
-class ManifestFile:
+
+class JsonFile:
     def __init__(self, path: Path) -> None:
         self._path = path
 
