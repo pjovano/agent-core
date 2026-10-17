@@ -39,6 +39,18 @@ jobs:
       - run: uv venv
       - run: uv run --no-project python -m unittest discover -s tests
 
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv venv
+      - name: Report the control-plane audit's lint rows; fail only if the engine cannot run
+        run: |
+          uv run --no-project python .claude/skills/control-plane-audit/scripts/audit.py lint > audit.json
+          jq '.' audit.json
+
   publish-guard:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -63,7 +75,7 @@ jobs:
 
   split-core:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [lint, test, publish-guard]
+    needs: [lint, test, audit, publish-guard]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

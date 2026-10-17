@@ -4,7 +4,9 @@
   "permissions": {
     "allow": [
       "Bash(python3 -m unittest discover -s tests:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(python3 .claude/skills/control-plane-audit/scripts/audit.py changed:*)",
+      "Bash(python3 .claude/skills/control-plane-audit/scripts/audit.py lint:*)"
     ]
   }
 }

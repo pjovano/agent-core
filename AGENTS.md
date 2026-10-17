@@ -53,10 +53,14 @@ fails if git tracks a `USER.md` at any depth.
 every failure they name:
 
 * the suite: `python3 -m unittest discover -s tests`;
-* the linter: `ruff check .`, the version `.github/workflows/ci.yml` pins.
+* the linter: `ruff check .`, the version `.github/workflows/ci.yml` pins;
+* the audit linter:
+  `python3 .claude/skills/control-plane-audit/scripts/audit.py lint`. The
+  audit linter fails only if the engine exits with an error. Read its rows;
+  CI reports them and gates on none.
 
-CI fails a pull request that fails the suite, the linter, the secret scan,
-or the decision gate. The secret scan runs gitleaks over the tree and every
+CI fails a pull request that fails the suite, the linter, the audit linter,
+the secret scan, or the decision gate. The secret scan runs gitleaks over the tree and every
 commit. The decision gate fails while the pull request carries the
 `needs-decision` label.
 
