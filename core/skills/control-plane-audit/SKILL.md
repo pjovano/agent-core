@@ -68,8 +68,8 @@ as audited, and an unfixed finding then goes unread until its file changes.
 ## The audit test bench
 
 **The bench measures an audit's recall.** The bench is a synthetic control
-plane, `tests/audit_bench/plane/` under the root, with one seed per defect
-class in `tests/audit_bench/seeds.json`. Only `agent-core` holds the bench.
+plane, `<root>/tests/audit_bench/plane/`, with one seed per defect class in
+`<root>/tests/audit_bench/seeds.json`. Only `agent-core` holds the bench.
 
 * **Seed.** A seed is one defect: `{id, check, class, target, mutation}`. Its
   `mutation` holds `find` and `replace`, or `after` and `insert`.
@@ -101,7 +101,7 @@ finding of the layer `lint`. A list holds findings, each with `check`, `file`,
 
 | Command | Fails if | Fix |
 | --- | --- | --- |
-| `bench build` | the root holds no `tests/audit_bench/` | run the command again with `--root` and the root of `agent-core` |
+| `bench build` | `<root>/tests/audit_bench/` does not exist | run the command again with `--root` and the root of `agent-core` |
 | `bench build` | `<dir>` holds a file | name a new or empty directory |
 | `bench build` | a seed's anchor occurs other than once in its target, or its new text occurs other than once after every seed | fix that seed in `seeds.json` |
 | `bench build` | the windows of two seeds of one check overlap, or a negative seed's window overlaps another seed's | move one seed of the pair in `seeds.json` |
