@@ -4,24 +4,22 @@ from collections.abc import Sequence
 
 from agent_core._domain.manifest import DomainManifest
 
-READ_RULE = "Read({path}/**)"
+GUARD_RULES = ("Read({path}/**)", "Edit({path}/**)")
 
 
 class SettingsBlocks:
-    def __init__(self, domain: DomainManifest, neighbours: Sequence[DomainManifest]) -> None:
+    def __init__(self, domain: DomainManifest) -> None:
         self._domain = domain
-        self._neighbours = [neighbour for neighbour in neighbours if neighbour.name != domain.name]
 
     def as_dict(self) -> dict:
         return {"permissions": self._permissions(), "sandbox": self._sandbox()}
 
     def _permissions(self) -> dict:
-        denied = [READ_RULE.format(path=path) for path in self._denied_paths()]
-        return NonEmpty({"allow": list(self._domain.policy.allow), "deny": denied}).entries()
+        return NonEmpty({"allow": list(self._domain.policy.allow)}).entries()
 
     def _sandbox(self) -> dict:
         policy = self._domain.policy
-        filesystem = NonEmpty({"allowWrite": self._write_paths(), "denyRead": self._denied_paths()}).entries()
+        filesystem = NonEmpty({"allowWrite": self._write_paths()}).entries()
         sandbox = {"enabled": True, "filesystem": filesystem, "network": self._network()}
         return NonEmpty({**sandbox, "excludedCommands": list(policy.excluded_commands)}).entries()
 
@@ -36,7 +34,18 @@ class SettingsBlocks:
         folder_paths = [path for folder in self._domain.writable_folders() for path in folder.write_paths()]
         return folder_paths + list(self._domain.policy.write_paths)
 
-    def _denied_paths(self) -> list[str]:
+
+class FolderGuards:
+    def __init__(self, domain: DomainManifest, neighbours: Sequence[DomainManifest]) -> None:
+        self._domain = domain
+        self._neighbours = [neighbour for neighbour in neighbours if neighbour.name != domain.name]
+
+    def as_dict(self) -> dict:
+        paths = self._guarded_paths()
+        rules = [rule.format(path=path) for path in paths for rule in GUARD_RULES]
+        return {"permissions": {"deny": rules}, "sandbox": {"filesystem": {"denyRead": paths}}}
+
+    def _guarded_paths(self) -> list[str]:
         own = self._domain.folder_names()
         guarded = {folder.path for neighbour in self._neighbours for folder in neighbour.sensitive_folders()
                    if folder.name not in own}
