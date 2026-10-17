@@ -1,6 +1,6 @@
 ---
 name: new-domain
-description: New domain — if asked to make a new domain, or to give a domain its vault or its folders in ~/Documents, invoke this skill. The skill asks the user the domain's answers, makes the domain from the core's template, writes its domain.json, prints its settings blocks, and runs the folder step.
+description: New domain — if asked to make a new domain, or to give a domain its vault or its folders in ~/Documents, invoke this skill. The skill asks the user the domain's answers, makes the domain from the domain template, writes its domain.json, prints its settings blocks, and runs the folder step.
 ---
 
 # New domain
@@ -39,7 +39,8 @@ the default.
 
 **A sensitive domain runs with no network host by default.** If `sensitive`
 is `true` and the user names a network host, ask the user to confirm the
-host.
+host. If the user confirms the host, keep the host in `policy`. Otherwise,
+drop the host from `policy`.
 
 **A folder of a sensitive domain is sensitive.** If `sensitive` is `true`,
 the script marks every folder `sensitive`.
@@ -57,14 +58,17 @@ The script takes these steps:
 
 1. It checks the manifest the answers make. If `domain.py` would refuse the
    manifest, the script writes nothing.
-2. It copies the domain template, and drops the suffix `.template` from
+2. If the repository has no commit, it makes an empty root commit on `main`.
+3. It cuts the branch `new-domain` from `main`.
+4. It copies the domain template, and drops the suffix `.template` from
    each file name.
-3. It commits the copy, and vendors the branch `core` at
+5. It commits the copy, and vendors the branch `core` at
    `vendor/agent-core/` with `git subtree add --squash`.
-4. It links every core unit into `.claude/` by a relative symlink.
-5. It writes `domain.json` and the settings blocks that
+6. It gives the squash commit a `Change-class` trailer.
+7. It links every core unit into `.claude/` by a relative symlink.
+8. It writes `domain.json` and the settings blocks that
    `vendor/agent-core/domain.py settings` prints for it.
-6. It commits the result, and runs the folder step.
+9. It commits the result on `new-domain`, and runs the folder step.
 
 **The command writes outside the session's repository.** If the sandbox
 denies a write, stop and ask the user to run the command in a terminal.
@@ -74,17 +78,22 @@ denies a write, stop and ask the user to run the command in a terminal.
 | The output carries | Do |
 | --- | --- |
 | `error` naming the answers file | fix the answer the error names with the user, then run the command again |
-| `error` naming the directory | stop and ask the user: the directory holds files the template would overwrite, or uncommitted changes |
+| `error` naming the directory | stop and ask the user: the directory holds files the domain template would overwrite, uncommitted changes, or commits but no `main` |
 | `error` from git | stop and ask the user, and name the directory the command left |
 | `folders.refused` | tell the user that the folders exist only once the folder step runs on the primary |
-| `folders.created` | report each folder, whether it existed, and the vault config files it received |
+| `folders.created` | report each folder, whether it existed, and each file the folder's `.obsidian/` received from `obsidian/` |
 
 **Report the settings blocks.** The output's `settings` holds the
 `permissions` and `sandbox` blocks the script wrote into
 `<directory>/.claude/settings.json`.
 
-**The new domain has no remote.** Tell the user to create its GitHub
-repository and push `main`.
+**The new domain reaches `main` through a pull request.** The output's
+`branch` names the branch that holds the domain.
+
+1. If the domain has no remote, tell the user to create its GitHub
+   repository and push `main`.
+2. Tell the user to push the branch and to open its pull request into
+   `main`.
 
 ## 4. The folder step on an existing domain
 

@@ -13,10 +13,13 @@ class Git:
         self._directory = directory
 
     def run(self, *arguments: str) -> str:
-        try:
-            return self._completed(arguments).stdout.strip()
-        except subprocess.CalledProcessError as error:
-            raise GitError(f"git {' '.join(arguments)} failed in {self._directory}: {error.stderr.strip()}") from error
+        completed = self._completed(arguments)
+        if completed.returncode != 0:
+            raise GitError(f"git {' '.join(arguments)} failed in {self._directory}: {completed.stderr.strip()}")
+        return completed.stdout.strip()
+
+    def succeeds(self, *arguments: str) -> bool:
+        return self._completed(arguments).returncode == 0
 
     def _completed(self, arguments: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(["git", *arguments], cwd=self._directory, capture_output=True, text=True, check=True)
+        return subprocess.run(["git", *arguments], cwd=self._directory, capture_output=True, text=True)

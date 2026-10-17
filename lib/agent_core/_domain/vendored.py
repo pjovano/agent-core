@@ -28,21 +28,29 @@ class VendoredDomainScript:
         return payload
 
 
-class ManifestWriter:
+class DomainSettings:
     def __init__(self, domain_root: Path) -> None:
         self._domain_root = domain_root
 
-    def written(self, manifest: dict) -> dict:
-        text = JsonText(manifest).text()
-        blocks = self._blocks_of(text)
-        (self._domain_root / MANIFEST_NAME).write_text(text, encoding="utf-8")
-        return blocks
+    def refuse_if_invalid(self, manifest: dict) -> None:
+        self.blocks(manifest)
 
-    def _blocks_of(self, text: str) -> dict:
+    def blocks_of_domain_json(self) -> dict:
+        return VendoredDomainScript(self._domain_root).settings(self._domain_root / MANIFEST_NAME)
+
+    def blocks(self, manifest: dict) -> dict:
         with tempfile.TemporaryDirectory() as directory:
             candidate = Path(directory) / MANIFEST_NAME
-            candidate.write_text(text, encoding="utf-8")
+            candidate.write_text(JsonText(manifest).text(), encoding="utf-8")
             return VendoredDomainScript(self._domain_root).settings(candidate)
+
+
+class ManifestFile:
+    def __init__(self, domain_root: Path) -> None:
+        self._path = domain_root / MANIFEST_NAME
+
+    def write(self, manifest: dict) -> None:
+        self._path.write_text(JsonText(manifest).text(), encoding="utf-8")
 
 
 class SettingsFile:

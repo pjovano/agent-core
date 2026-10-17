@@ -18,8 +18,9 @@
 
 **The soul file and the user file bind every session.** `CLAUDE.md`
 imports this contract, then `vendor/agent-core/SOUL.md`, then `USER.md`. If
-a host reads only this contract, read the soul file whole after it. Then
-read the user file if it exists.
+a host reads only this contract, read the soul file whole after it. If a
+host reads only this contract and the user file exists, read the user file
+after the soul file.
 
 **The user file is never versioned.** NEVER commit `USER.md`: `.gitignore`
 names it, and a test fails if git tracks it.
@@ -41,7 +42,8 @@ vendored core.
 **Every change reaches `main` through a pull request.**
 
 * Commit on a branch cut from `main`.
-* NEVER commit on `main` itself.
+* NEVER commit on `main` after its root commit: the root commit is the
+  base a pull request needs.
 * End every commit message with one trailer: `Defect-class: <class>` for a
   fix, or `Change-class: refactor|feature — <what>` otherwise.
 * Title the pull request with the rule or the behaviour the change leaves in
