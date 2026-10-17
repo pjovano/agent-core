@@ -7,11 +7,11 @@ after every merge to `main`, and a domain vendors that branch at
 | Part | Holds | Filled by |
 | --- | --- | --- |
 | `SOUL.md` | the soul file, which every `CLAUDE.md` imports | A6 |
-| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, and `remember`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, and `remember` keeps a domain's `USER.md` |
+| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, `remember`, and `control-plane-audit`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, `remember` keeps a domain's `USER.md`, and `control-plane-audit` runs the audit engine with a domain's `audit/checks.py` |
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
-| `audit/` | the control-plane audit engine | A2 |
-| `lib/` | `agent_core/`, the core's one Python package: the host ports `Scheduler`, `Notifier`, and `SystemReadings`, with their macOS adapters; the agent-host port and its adapters | the host ports now; the agent-host port in G19 |
+| `audit/` | the audit's committed data: the practices digest | U8 |
+| `lib/` | `agent_core/`, the core's one Python package: the control-plane audit engine, `_audit/`; the host ports `Scheduler`, `Notifier`, and `SystemReadings`, with their macOS adapters; the agent-host port and its adapters | the audit engine and the host ports now; the agent-host port in G19 |
 | `templates/domain/` | the domain template `new-domain` copies | A5 |
 | `domain.py` | the manifest reader and the settings generator | G20 |
 
