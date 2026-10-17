@@ -32,35 +32,43 @@ class FolderStep:
     vault_config: Path
     machine: Machine
 
-    def run(self, manifest: DomainManifest) -> dict:
+    def report(self, manifest: DomainManifest) -> dict:
         if self.machine.is_cloud_session:
             return {"created": [], "refused": CLOUD_REFUSAL}
-        created = {folder.name: self._prepared(folder) for folder in manifest.folders}
+        entries = {folder.name: self._entry(folder) for folder in manifest.folders}
         if manifest.vault is not None:
-            created[manifest.vault]["vault_config"] = self._made_a_vault(manifest.vault)
-        return {"created": list(created.values())}
+            entries[manifest.vault]["vault_config"] = self._missing_vault_config(manifest.vault)
+        return {"created": list(entries.values())}
 
-    def _prepared(self, folder: Folder) -> dict:
-        path = self.documents / folder.name
-        existed = path.is_dir()
-        path.mkdir(parents=True, exist_ok=True)
+    def run(self, manifest: DomainManifest) -> None:
+        if self.machine.is_cloud_session:
+            return
+        for folder in manifest.folders:
+            (self.documents / folder.name).mkdir(parents=True, exist_ok=True)
+        if manifest.vault is not None:
+            VaultConfig(self.vault_config).copy_into(self.documents / manifest.vault)
+
+    def _entry(self, folder: Folder) -> dict:
+        existed = (self.documents / folder.name).is_dir()
         return {"folder": f"{DOCUMENTS}/{folder.name}", "existed": existed, "vault_config": []}
 
-    def _made_a_vault(self, vault: str) -> list[str]:
-        return VaultConfig(self.vault_config).copied_into(self.documents / vault)
+    def _missing_vault_config(self, vault: str) -> list[str]:
+        missing = VaultConfig(self.vault_config).missing_in(self.documents / vault)
+        return [(VAULT_CONFIG_TARGET / relative).as_posix() for relative in missing]
 
 
 class VaultConfig:
     def __init__(self, source: Path) -> None:
         self._source = source
 
-    def copied_into(self, folder: Path) -> list[str]:
-        target_dir = folder / VAULT_CONFIG_TARGET
-        missing = [path for path in self._files() if not (target_dir / path).exists()]
-        for relative in missing:
-            (target_dir / relative).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(self._source / relative, target_dir / relative)
-        return [(VAULT_CONFIG_TARGET / relative).as_posix() for relative in missing]
+    def missing_in(self, folder: Path) -> list[Path]:
+        return [relative for relative in self._files() if not (folder / VAULT_CONFIG_TARGET / relative).exists()]
+
+    def copy_into(self, folder: Path) -> None:
+        for relative in self.missing_in(folder):
+            target = folder / VAULT_CONFIG_TARGET / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(self._source / relative, target)
 
     def _files(self) -> list[Path]:
         return [path.relative_to(self._source) for path in sorted(self._source.rglob("*")) if path.is_file()]

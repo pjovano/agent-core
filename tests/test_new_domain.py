@@ -7,11 +7,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from _new_domain import BASIC_ANSWERS, DOMAIN_NAME, TEMPLATE_DIR, NewDomainRun, Outcome, PublishedCore
+from _new_domain import BASIC_ANSWERS, CORE_BRANCH, DOMAIN_NAME, TEMPLATE_DIR, NewDomainRun, Outcome, PublishedCore
 
 VAULT_CONFIG = Path(".obsidian") / "graph.json"
 SHARED_FOLDER = "library"
 NEW_FOLDER = "recipes"
+DOMAIN_BRANCH = "new-domain"
+TRAILER_KEYS = ("Change-class: ", "Defect-class: ")
+VENDORED_CORE = "vendor/agent-core"
+LATER_CORE_FILE = "later.md"
+EXISTING_FILE = "README.md"
 
 
 class Workspace:
@@ -50,6 +55,62 @@ class ADomainMadeWithEveryDefault(unittest.TestCase):
         completed = subprocess.run([sys.executable, "vendor/agent-core/domain.py", "settings"],
                                    cwd=self.outcome.domain, capture_output=True, text=True)
         self.assertEqual(json.loads(completed.stdout), self.outcome.payload["settings"])
+
+
+class TheNewDomainsHistory(unittest.TestCase):
+    outcome: Outcome
+    run_in: NewDomainRun
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.run_in = Workspace(cls).run()
+        cls.outcome = cls.run_in.create(BASIC_ANSWERS, cloud=True)
+
+    def test_the_domain_waits_on_its_own_branch(self) -> None:
+        self.assertEqual((DOMAIN_BRANCH, DOMAIN_BRANCH),
+                         (self.run_in.git("branch", "--show-current"), self.outcome.payload["branch"]))
+
+    def test_main_holds_only_an_empty_root_commit(self) -> None:
+        commits = self.run_in.git("rev-list", "main").split()
+        self.assertEqual((1, ""), (len(commits), self.run_in.git("ls-tree", "main")))
+
+    def test_every_commit_ends_with_a_change_class_or_defect_class_trailer(self) -> None:
+        messages = self.run_in.git("log", "--format=%B%x00", DOMAIN_BRANCH).split("\0")
+        last_lines = [message.strip().splitlines()[-1] for message in messages if message.strip()]
+        self.assertEqual([], [line for line in last_lines if not line.startswith(TRAILER_KEYS)])
+
+
+class TheVendoredCoreOfANewDomain(unittest.TestCase):
+    def setUp(self) -> None:
+        self.run_in = Workspace(type(self)).run()
+        self.outcome = self.run_in.create(BASIC_ANSWERS, cloud=True)
+
+    def test_a_later_subtree_pull_finds_it(self) -> None:
+        self.run_in.core.add_file(LATER_CORE_FILE)
+        self.run_in.git("subtree", "pull", "--prefix", VENDORED_CORE, str(self.run_in.core.directory), CORE_BRANCH,
+                        "--squash", "--message", "Pull the core")
+        self.assertTrue((self.outcome.domain / VENDORED_CORE / LATER_CORE_FILE).is_file())
+
+
+class ADomainMadeInAnExistingRepository(unittest.TestCase):
+    def setUp(self) -> None:
+        self.run_in = Workspace(type(self)).run()
+        self.run_in.domain.mkdir()
+        self.run_in.git("init", "--quiet", "--initial-branch", "main")
+
+    def test_a_repository_with_commits_on_main_keeps_main_as_it_was(self) -> None:
+        (self.run_in.domain / EXISTING_FILE).write_text("existing\n", encoding="utf-8")
+        self.run_in.git("add", EXISTING_FILE)
+        self.run_in.git("commit", "--quiet", "--message", "Start")
+        before = self.run_in.git("rev-parse", "main")
+        outcome = self.run_in.create(BASIC_ANSWERS, cloud=True)
+        self.assertEqual((0, before), (outcome.returncode, self.run_in.git("rev-parse", "main")))
+
+    def test_a_repository_with_commits_but_no_main_is_refused(self) -> None:
+        self.run_in.git("switch", "--quiet", "--orphan", "trunk")
+        self.run_in.git("commit", "--quiet", "--allow-empty", "--message", "Start")
+        outcome = self.run_in.create(BASIC_ANSWERS, cloud=True)
+        self.assertEqual((1, True), (outcome.returncode, "no branch main" in outcome.payload["error"]))
 
 
 class ADomainThatDeclinesTheVault(unittest.TestCase):

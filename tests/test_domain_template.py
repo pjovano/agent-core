@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -10,12 +12,37 @@ from pathlib import Path
 
 from _new_domain import BASIC_ANSWERS, CORE_DIR, TEMPLATE_DIR, NewDomainRun, Outcome, PublishedCore, \
     isolated_environment
+from _repository import REPOSITORY_ROOT
 
 RENDERED_SUFFIX = ".template"
 CONTRACT_NAMES = ("AGENTS.md", "CLAUDE.md")
 LINKED_KINDS = ("skills", "agents", "workflows")
 VENDORED_CORE = "vendor/agent-core"
 HOME_PREFIX = "~/"
+DECISION_GATE = Path(".github") / "workflows" / "decision-gate.yml"
+CI_VARIABLE = "CI"
+CI_VALUE = "true"
+GITLEAKS_SCANS = ("git", "dir")
+CI_WORKFLOW = Path(".github") / "workflows" / "ci.yml"
+GITLEAKS_ACTION = Path(".github") / "actions" / "install-gitleaks" / "action.yml"
+PIN_PATTERN = re.compile(r"^\s*((?:RUFF|GITLEAKS)_(?:VERSION|SHA256)): (\S+)$", re.MULTILINE)
+
+
+class ToolOnPath:
+    def __init__(self, case: unittest.TestCase, name: str) -> None:
+        self._case = case
+        self._name = name
+
+    def path(self) -> str:
+        found = shutil.which(self._name)
+        if found is None:
+            self._missing()
+        return found
+
+    def _missing(self) -> None:
+        if os.environ.get(CI_VARIABLE) == CI_VALUE:
+            self._case.fail(f"{self._name} is not on PATH; CI installs it before the suite runs")
+        self._case.skipTest(f"{self._name} is not on PATH")
 
 
 class ADomainMadeFromTheTemplate(unittest.TestCase):
@@ -30,8 +57,26 @@ class ADomainMadeFromTheTemplate(unittest.TestCase):
         cls.environment = isolated_environment(workspace / "home")
 
     def run_in_domain(self, *arguments: str) -> subprocess.CompletedProcess:
-        return subprocess.run([sys.executable, *arguments], cwd=self.outcome.domain, capture_output=True,
-                              text=True, env=self.environment)
+        return self.run_tool_in_domain(sys.executable, *arguments)
+
+    def run_tool_in_domain(self, *command: str) -> subprocess.CompletedProcess:
+        return subprocess.run(command, cwd=self.outcome.domain, capture_output=True, text=True, env=self.environment)
+
+    def test_its_own_linter_passes(self) -> None:
+        completed = self.run_tool_in_domain(ToolOnPath(self, "ruff").path(), "check", ".")
+        self.assertEqual(0, completed.returncode, completed.stdout)
+
+    def test_its_own_secret_scan_passes_over_the_tree_and_every_commit(self) -> None:
+        gitleaks = ToolOnPath(self, "gitleaks").path()
+        for scan in GITLEAKS_SCANS:
+            with self.subTest(scan=scan):
+                completed = self.run_tool_in_domain(gitleaks, scan, "--config", ".gitleaks.toml", "--redact",
+                                                    "--exit-code", "1", ".")
+                self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
+    def test_its_decision_gate_is_the_gate_the_core_passes_on_every_pull_request(self) -> None:
+        self.assertEqual((REPOSITORY_ROOT / DECISION_GATE).read_text(encoding="utf-8"),
+                         (self.outcome.domain / DECISION_GATE).read_text(encoding="utf-8"))
 
     def test_its_own_suite_passes(self) -> None:
         completed = self.run_in_domain("-m", "unittest", "discover", "-s", "tests")
@@ -78,6 +123,22 @@ class TheTemplateHoldsNoFileThatBreaksTheCore(unittest.TestCase):
     def test_its_vault_config_names_no_path_and_no_colour_group(self) -> None:
         graph = json.loads((TEMPLATE_DIR / "obsidian" / "graph.json").read_text(encoding="utf-8"))
         self.assertEqual(("", []), (graph["search"], graph["colorGroups"]))
+
+
+class TheCoresCiInstallsTheToolVersionsTheDomainsCiPins(unittest.TestCase):
+    def test_each_pinned_version_matches(self) -> None:
+        domain_ci = PinnedVersions(TEMPLATE_DIR / CI_WORKFLOW).values()
+        core_ci = {**PinnedVersions(REPOSITORY_ROOT / CI_WORKFLOW).values(),
+                   **PinnedVersions(REPOSITORY_ROOT / GITLEAKS_ACTION).values()}
+        self.assertEqual(domain_ci, {name: core_ci.get(name) for name in domain_ci})
+
+
+class PinnedVersions:
+    def __init__(self, workflow: Path) -> None:
+        self._workflow = workflow
+
+    def values(self) -> dict[str, str]:
+        return dict(PIN_PATTERN.findall(self._workflow.read_text(encoding="utf-8")))
 
 
 if __name__ == "__main__":

@@ -34,17 +34,28 @@ def isolated_environment(home: Path, cloud: bool = False) -> dict[str, str]:
             **IDENTITY, **cloud_session}
 
 
+def git_output(directory: Path, home: Path, *arguments: str) -> str:
+    return subprocess.run(["git", *arguments], cwd=directory, check=True, capture_output=True, text=True,
+                          env=isolated_environment(home)).stdout.strip()
+
+
 class PublishedCore:
     def __init__(self, workspace: Path) -> None:
         self.directory = workspace / "published-core"
 
     def published(self) -> PublishedCore:
         shutil.copytree(CORE_DIR, self.directory, ignore=shutil.ignore_patterns("__pycache__"))
-        for arguments in (("init", "--quiet", "--initial-branch", CORE_BRANCH), ("add", "--all"),
-                          ("commit", "--quiet", "--message", "Publish the core")):
-            subprocess.run(["git", *arguments], cwd=self.directory, check=True, capture_output=True,
-                           env=isolated_environment(self.directory))
+        git_output(self.directory, self.directory, "init", "--quiet", "--initial-branch", CORE_BRANCH)
+        self._commit_all("Publish the core")
         return self
+
+    def add_file(self, name: str) -> None:
+        (self.directory / name).write_text(f"{name}\n", encoding="utf-8")
+        self._commit_all(f"Publish {name}")
+
+    def _commit_all(self, message: str) -> None:
+        git_output(self.directory, self.directory, "add", "--all")
+        git_output(self.directory, self.directory, "commit", "--quiet", "--message", message)
 
 
 @dataclass(frozen=True)
@@ -61,14 +72,17 @@ class Outcome:
 class NewDomainRun:
     def __init__(self, workspace: Path, core: PublishedCore) -> None:
         self._workspace = workspace
-        self._core = core
+        self.core = core
         self.home = workspace / "home"
         self.domain = workspace / DOMAIN_NAME
         self.home.mkdir(exist_ok=True)
 
     def create(self, answers: dict, cloud: bool = False) -> Outcome:
         return self._run(["create", str(self._answers_file(answers)), "--into", str(self.domain),
-                          "--core-url", str(self._core.directory)], cloud)
+                          "--core-url", str(self.core.directory)], cloud)
+
+    def git(self, *arguments: str) -> str:
+        return git_output(self.domain, self.home, *arguments)
 
     def folders(self, answers: dict, cloud: bool = False) -> Outcome:
         return self._run(["folders", str(self._answers_file(answers)), "--domain", str(self.domain)], cloud)
