@@ -304,7 +304,10 @@ a heading mark, or the target of a link.
 | --- | --- |
 | code span | one word |
 | technical name | one word, however many words it holds |
-| table cell | one word, in any count wider than the cell |
+| table cell | one word, in an STE count wider than the cell |
+
+**A file's word count takes every word as written.** NEVER count a unit
+above as one word in a file's word count: a table would escape the count.
 
 **A sentence ends at a full stop, a question mark, or an exclamation mark
 before a space or a line end.** A mark inside a code span ends no sentence.
