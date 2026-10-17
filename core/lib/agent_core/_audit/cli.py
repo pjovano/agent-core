@@ -15,6 +15,8 @@ from agent_core._audit.baseline import (
     Baseline,
     CorruptBaseline,
 )
+from agent_core._audit.bench import BenchBuild, BenchError, BenchSource
+from agent_core._audit.bench_score import BenchScore, FindingsFile, Manifest
 from agent_core._audit.checks import DomainChecksFile, ReportCheck
 from agent_core._audit.measures import CodeMeasures
 from agent_core._audit.pointers import InstructionPointers
@@ -43,6 +45,11 @@ HELP_LINT = "the mechanical checks over the whole control plane"
 HELP_ACCEPT = "record every control-plane file as audited, ending this audit"
 HELP_ALL = "cover every control-plane file"
 HELP_CHANGED_ONLY = "cover only the files changed since the last accepted audit"
+HELP_BENCH = "the audit test bench: a synthetic control plane with one seeded defect per class"
+HELP_BENCH_BUILD = "copy the bench plane into a new directory, apply every seed, and print the seed manifest"
+HELP_BENCH_SCORE = "match the findings to the seeds of a built bench, and print the recall"
+HELP_BENCH_DIRECTORY = "the bench directory"
+HELP_FINDINGS = "a JSON file: the output of lint, or a list of findings, each with check, file, line, and layer"
 
 Handler = Callable[[argparse.Namespace], dict]
 
@@ -54,7 +61,7 @@ class CommandLine:
     def run(self, argv: list[str]) -> None:
         try:
             self._run(argv)
-        except (CorruptBaseline, RootNotFound) as error:
+        except (CorruptBaseline, RootNotFound, BenchError) as error:
             self._print({"error": str(error)})
             sys.exit(EXIT_FAILURE)
 
@@ -83,6 +90,7 @@ class CommandLine:
         for check in domain.reports():
             ReportSubcommand(check, domain.root).added_to(commands)
         Subcommand("accept", HELP_ACCEPT, domain.accept).added_to(commands)
+        BenchSubcommand(domain.root).added_to(commands)
         return parser
 
 
@@ -175,6 +183,26 @@ class ReportSubcommand(Subcommand):
 
     def _reported(self, _args: argparse.Namespace) -> dict:
         return self._check.report(self._root)
+
+
+class BenchSubcommand:
+    def __init__(self, root: Path) -> None:
+        self._root = root
+
+    def added_to(self, commands: argparse._SubParsersAction) -> None:
+        actions = commands.add_parser("bench", help=HELP_BENCH).add_subparsers(dest="bench_command", required=True)
+        build = Subcommand("build", HELP_BENCH_BUILD, self._built).added_to(actions)
+        build.add_argument("directory", type=Path, help=HELP_BENCH_DIRECTORY)
+        score = Subcommand("score", HELP_BENCH_SCORE, self._scored).added_to(actions)
+        score.add_argument("directory", type=Path, help=HELP_BENCH_DIRECTORY)
+        score.add_argument("findings", type=Path, help=HELP_FINDINGS)
+
+    def _built(self, args: argparse.Namespace) -> dict:
+        return BenchBuild(BenchSource(self._root), args.directory).manifest()
+
+    @staticmethod
+    def _scored(args: argparse.Namespace) -> dict:
+        return BenchScore(Manifest(args.directory).seeds(), FindingsFile(args.findings).findings()).report()
 
 
 class EveryFile:

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 .claude/skills/file-records/scripts/file_records.py list:*)",
+      "Bash(python3 .claude/skills/file-records/scripts/file_records.py file:*)"
+    ]
+  }
+}
