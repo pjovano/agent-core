@@ -1,0 +1,21 @@
+{
+  "name": "research",
+  "summary": "Answers research questions from a library of PDFs.",
+  "folders": [
+    {"name": "library", "access": "write"},
+    {"name": "research vault", "access": "write", "write_within": ["corpus", "writing"]},
+    {"name": "recipes", "access": "read"}
+  ],
+  "policy": {
+    "allow": [
+      "Bash(git status --porcelain)",
+      "Edit(~/Documents/research vault/corpus/**)",
+      "mcp__vault-rag__search_hybrid"
+    ],
+    "prompt_on": {"--replace": "rewrites a corpus file's body"},
+    "network_hosts": ["localhost", "api.crossref.org"],
+    "allow_local_binding": true,
+    "write_paths": ["~/Desktop/inbox", "~/.cache/torch"],
+    "excluded_commands": ["gh *", "git push *"]
+  }
+}

@@ -10,7 +10,8 @@ from _repository import REPOSITORY_ROOT
 CORE_PACKAGE = "agent_core"
 FUTURE = "__future__"
 CORE_DIR = REPOSITORY_ROOT / "core"
-CODE_FILES = sorted([*(CORE_DIR / "lib").rglob("*.py"), *(CORE_DIR / "skills").glob("*/scripts/*.py"),
+CODE_FILES = sorted([CORE_DIR / "domain.py", *(CORE_DIR / "lib").rglob("*.py"),
+                     *(CORE_DIR / "skills").glob("*/scripts/*.py"),
                      *(REPOSITORY_ROOT / "bin").glob("*.py")])
 
 
