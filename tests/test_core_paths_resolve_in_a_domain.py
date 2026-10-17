@@ -47,7 +47,7 @@ class EveryPathACoreUnitNamesResolvesInADomain(unittest.TestCase):
 
     @staticmethod
     def _names_a_repository_path(finding: dict) -> bool:
-        is_missing_path = finding["finding"] == FINDING_MISSING_PATH
+        is_missing_path = finding["rule"] == FINDING_MISSING_PATH
         return is_missing_path and not finding["detail"].startswith(HomeRoot.prefix)
 
 

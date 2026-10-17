@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
+from agent_core._audit.contract import ContractLocations
 from agent_core._audit.scope import Scope
 
 if TYPE_CHECKING:
@@ -43,6 +44,7 @@ class DomainChecks:
     scope: Scope = field(default_factory=Scope)
     lint: tuple[LintCheck, ...] = ()
     reports: tuple[ReportCheck, ...] = ()
+    contract: ContractLocations = field(default_factory=ContractLocations)
 
 
 class PrimaryOnly:

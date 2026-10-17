@@ -12,6 +12,8 @@ BASELINE_PATH = Path("audit") / "baseline.json"
 STATUS_NEW = "new"
 STATUS_CHANGED = "changed"
 STATUS_REMOVED = "removed"
+ACKNOWLEDGED_KEY = "acknowledged"
+WEIGHT_KEY = "weight"
 _PARTIAL_SUFFIX = ".partial"
 
 
@@ -37,11 +39,32 @@ class Baseline:
         return {STATUS_NEW: self._new(present, audited), STATUS_CHANGED: self._modified(present, audited),
                 STATUS_REMOVED: sorted(name for name in audited if name not in present)}
 
-    def accept(self, paths: list[Path]) -> dict:
+    def acknowledged(self) -> dict[str, str]:
+        return self._recorded().get(ACKNOWLEDGED_KEY, {})
+
+    def weight(self) -> dict | None:
+        return self._recorded().get(WEIGHT_KEY)
+
+    def accept(self, paths: list[Path], weight: dict | None = None) -> dict:
         digests = self._present(paths)
-        recorded = {"accepted": self._today.isoformat(), "digests": digests}
+        recorded = {**self._recorded(), "accepted": self._today.isoformat(), "digests": digests}
+        if weight is not None:
+            recorded[WEIGHT_KEY] = weight
         self._write(recorded)
         return {"accepted": recorded["accepted"], "files": len(digests)}
+
+    def acknowledge(self, reasons: dict[str, str]) -> dict:
+        recorded = self._recorded()
+        acknowledged = {**recorded.get(ACKNOWLEDGED_KEY, {}), **reasons}
+        self._write({**recorded, ACKNOWLEDGED_KEY: acknowledged})
+        return {"acknowledged": len(reasons), "total": len(acknowledged)}
+
+    def dismiss(self, fingerprints: list[str]) -> dict:
+        recorded = self._recorded()
+        kept = {key: reason for key, reason in recorded.get(ACKNOWLEDGED_KEY, {}).items() if key not in fingerprints}
+        removed = len(recorded.get(ACKNOWLEDGED_KEY, {})) - len(kept)
+        self._write({**recorded, ACKNOWLEDGED_KEY: kept})
+        return {"dismissed": removed, "total": len(kept)}
 
     def _write(self, recorded: dict) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)

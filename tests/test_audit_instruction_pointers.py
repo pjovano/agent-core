@@ -37,7 +37,7 @@ class TestInstructionPointers(unittest.TestCase):
     def _findings(self, name: str, text: str) -> list[str]:
         written = self.files.written(name, text)
         pointers = InstructionPointers([written], ControlPlaneFiles(self.files.root), TODAY)
-        return [finding["finding"] for finding in pointers.findings()]
+        return [finding["rule"] for finding in pointers.findings()]
 
     def test_a_path_that_does_not_exist_is_reported(self) -> None:
         self.assertEqual([FINDING_MISSING_PATH], self._findings("missing.md", MISSING_PATH_NOTE))
@@ -66,7 +66,7 @@ class TestInstructionPointersThroughACoreSymlink(unittest.TestCase):
         self.assertEqual([], self._findings_of(self.files.written("rule.md", LINKED_PATH_NOTE)))
 
     def test_a_path_through_a_broken_symlink_is_reported(self) -> None:
-        expected = [{"file": "rule.md", "line": 1, "finding": FINDING_MISSING_PATH,
+        expected = [{"rule": FINDING_MISSING_PATH, "file": "rule.md", "line": 1,
                      "detail": f"{BROKEN_SKILL_LINK}/SKILL.md"}]
         self.assertEqual(expected, self._findings_of(self.files.written("rule.md", BROKEN_LINK_NOTE)))
 
