@@ -1,0 +1,9 @@
+{
+  "name": "personal",
+  "summary": "Keeps the user's personal records.",
+  "folders": [
+    {"name": "taxes", "access": "write", "sensitive": true},
+    {"name": "medical", "access": "read", "sensitive": true},
+    {"name": "recipes", "access": "write"}
+  ]
+}
