@@ -28,7 +28,9 @@ LIMIT_OF_RULE = {
 }
 COUNTING_RULES = (
     "| code span | one word |", "| technical name | one word, however many words it holds |",
-    "| table cell | one word, in any count wider than the cell |",
+    "| table cell | one word, in an STE count wider than the cell |",
+    "**A file's word count takes every word as written.**",
+    "NEVER count a unit above as one word in a file's word count: a table would escape the count.",
     "A table cell's words meet the word limit of the form its row takes.",
 )
 RATCHET_RULES = (
