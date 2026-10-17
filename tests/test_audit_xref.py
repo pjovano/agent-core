@@ -101,6 +101,12 @@ class TestSubcommands(unittest.TestCase):
         self.plane.allowed(["list", "file", "export"])
         self.assertEqual([("subcommand-not-in-prose", SCRIPT_PATH)], self.plane.rows())
 
+    def test_a_subcommand_named_after_its_parent_in_a_code_span_is_named(self) -> None:
+        self.plane.changed(SCRIPT_PATH, "    return program", "    commands.add_parser(\"learn\")\n    return program")
+        self.plane.allowed(["list", "file", "learn"])
+        self.plane.changed(SKILL_PATH, "| `list` | prints each record |", "| `list` | prints; `fonts learn` records a font |")
+        self.assertEqual([], self.plane.rows())
+
     def test_a_parser_with_a_computed_name_is_never_read_as_complete(self) -> None:
         self.plane.changed(SCRIPT_PATH, "    return program", "    commands.add_parser(NAME)\n    return program")
         self.plane.changed(SKILL_PATH, "| `list` |", "| `purge` | deletes |\n| `list` |")

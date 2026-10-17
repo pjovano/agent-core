@@ -67,8 +67,7 @@ class XrefCheck:
         words = set()
         for path in self._instructions:
             for line in MarkdownFile(path).lines:
-                words |= {span.group(0).strip("`").split()[0] for span in CODE_SPAN.finditer(line)
-                          if span.group(0).strip("`").split()}
+                words |= {word for span in CODE_SPAN.finditer(line) for word in span.group(0).strip("`").split()}
                 words |= {match.group(2) for match in SCRIPT_CALL.finditer(line)}
         for workflow in self._root.glob(WORKFLOW_PATTERN):
             words |= set(re.findall(r"[a-z][a-z0-9-]*", workflow.read_text(encoding=ENCODING)))
