@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from _audit_files import AuditRun, TemporaryFiles
@@ -21,10 +22,13 @@ LINT_FILE = "lint.json"
 FINDINGS_FILE = "findings.json"
 SCRIPT = REPOSITORY_ROOT / ".claude" / "skills" / "control-plane-audit" / "scripts" / "audit.py"
 SEEDS = json.loads((REPOSITORY_ROOT / BENCH_SOURCE / "seeds.json").read_text(encoding="utf-8"))
-PLANE_FILES = 9
-PINNED_LINT_FOUND = {"code": 4, "delegation": 0, "failure": 0, "pointers": 2, "prose": 0, "redundancy": 0,
-                     "special": 0, "staleness": 0, "xref": 0}
-PINNED_LINT_RECALL = 0.188
+PLANE_FILES = 10
+PINNED_LINT_FOUND = {"code": 8, "delegation": 0, "failure": 0, "pointers": 2, "prose": 5, "redundancy": 1,
+                     "special": 4, "staleness": 1, "xref": 5}
+PINNED_LINT_RECALL = 0.812
+JUDGMENT_SEEDS = ("prose-no-failure-branch", "prose-no-default", "prose-unbound-antecedent", "delegation-missing-rule",
+                  "code-non-atomic-write", "failure-service-offline")
+COMMIT_RULE = "commit-without-trailer"
 COMMIT_SEED = "special-commit-trailer"
 TRAILER_MARKS = ("Defect-class:", "Change-class:")
 REPORT_NAME = "rooted"
@@ -91,6 +95,13 @@ class TestThePlaneAtRest(unittest.TestCase):
 
     def test_the_plane_at_rest_yields_no_pointers_row(self) -> None:
         self.assertEqual([], self.lint["pointers"])
+
+    def test_the_plane_at_rest_yields_no_lint_row(self) -> None:
+        rows = {name: value for name, value in self.lint.items() if isinstance(value, list) and value}
+        self.assertEqual({}, rows)
+
+    def test_the_plane_at_rest_runs_every_lint_check(self) -> None:
+        self.assertNotIn("skipped", self.lint)
 
     def test_the_plane_holds_its_control_plane_files_under_their_built_names(self) -> None:
         self.assertEqual(PLANE_FILES, self.lint["files"]["control_plane"])
@@ -207,6 +218,15 @@ class TestTheLintLayersRecall(unittest.TestCase):
     def test_the_lint_layers_recall_is_pinned(self) -> None:
         self.assertEqual(PINNED_LINT_RECALL, self.score["per_layer"]["lint"]["recall"])
 
+    def test_the_lint_layer_finds_every_mechanical_seed(self) -> None:
+        self.assertEqual(sorted(JUDGMENT_SEEDS), sorted(self.score["missed"]))
+
+    def test_the_lint_layers_recall_on_the_mechanical_seeds_of_each_check_is_one(self) -> None:
+        mechanical = Counter(seed["check"] for seed in SEEDS if not seed.get("negative")
+                             and seed["id"] not in JUDGMENT_SEEDS)
+        found = {check: row["found"] for check, row in self.score["per_layer"]["lint"]["per_check"].items()}
+        self.assertEqual(dict(mechanical), {check: found[check] for check in mechanical})
+
     def test_no_lint_finding_lands_on_a_negative_seed(self) -> None:
         self.assertEqual([], self.score["false_positives"])
 
@@ -304,14 +324,14 @@ class TestEveryCheckReadsTheBenchThroughItsRoot(unittest.TestCase):
 
     def test_the_audit_set_counts_the_bench_alone(self) -> None:
         counts = json.loads(self.outputs[("changed", "--all")])["counts"]
-        self.assertEqual(PLANE_FILES + 1, counts["control_plane"])
+        self.assertEqual(PLANE_FILES, counts["control_plane"])
 
     def test_a_domain_report_receives_the_bench_as_its_root(self) -> None:
         self.assertEqual(str(self.bench.resolve()), json.loads(self.outputs[(REPORT_NAME,)])["root"])
 
     def test_accept_writes_the_baseline_of_the_bench(self) -> None:
         recorded = json.loads((self.bench / "audit" / "baseline.json").read_text(encoding="utf-8"))
-        self.assertEqual(PLANE_FILES + 1, len(recorded["digests"]))
+        self.assertEqual(PLANE_FILES, len(recorded["digests"]))
 
     def test_accept_writes_no_baseline_into_the_repository(self) -> None:
         self.assertFalse((REPOSITORY_ROOT / "audit" / "baseline.json").exists())
@@ -324,7 +344,7 @@ class FileLabels:
     def all(self) -> list[str]:
         listed = [label for key in ("changed", "related", "removed") for label in self._payload.get(key, [])]
         return listed + [row["file"] for value in self._payload.values() if isinstance(value, list)
-                         for row in value if isinstance(row, dict)]
+                         for row in value if isinstance(row, dict) and row.get("rule") != COMMIT_RULE]
 
 
 if __name__ == "__main__":

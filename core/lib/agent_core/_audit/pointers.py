@@ -4,6 +4,7 @@ import re
 from datetime import date
 from pathlib import Path
 
+from agent_core._audit.rows import Row
 from agent_core._audit.scope import ENCODING, ControlPlaneFiles, RepositoryPath
 
 BACKTICKED = re.compile(r"`([^`\n]+)`")
@@ -50,8 +51,7 @@ class FilePointers:
             return False
 
     def _finding(self, line: int, finding: str, detail: str) -> dict:
-        return {"file": RepositoryPath(self._path, self._files.root).label(), "line": line, "finding": finding,
-                "detail": detail}
+        return Row(finding, RepositoryPath(self._path, self._files.root).label(), line, detail).as_dict()
 
 
 class NamedPath:

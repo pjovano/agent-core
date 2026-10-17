@@ -3,14 +3,13 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from agent_core._audit.rows import Row
 from agent_core._audit.scope import ENCODING, RepositoryPath
 
 MAX_FUNCTION_LINES = 20
 MAX_FILE_LINES = 500
-MAX_ARGUMENTS = 3
 MEASURE_LONG_FUNCTION = "function-over-20-lines"
 MEASURE_LONG_FILE = "file-over-500-lines"
-MEASURE_ARGUMENTS = "more-than-three-arguments"
 MEASURE_DOCSTRING = "docstring"
 MEASURE_COMMENT = "comment"
 MODULE_NAME = "module"
@@ -57,16 +56,9 @@ class FileMeasures:
         length = node.end_lineno - node.lineno + 1
         if length > MAX_FUNCTION_LINES:
             findings.append(self._finding(node.lineno, MEASURE_LONG_FUNCTION, f"{node.name}, {length} lines"))
-        findings.extend(self._argument_findings(node))
         if ast.get_docstring(node):
             findings.append(self._finding(node.lineno, MEASURE_DOCSTRING, node.name))
         return findings
-
-    def _argument_findings(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[dict]:
-        named = [argument.arg for argument in node.args.args if argument.arg not in ("self", "cls")]
-        if len(named) <= MAX_ARGUMENTS:
-            return []
-        return [self._finding(node.lineno, MEASURE_ARGUMENTS, f"{node.name}, {len(named)} arguments")]
 
     def _comments(self) -> list[dict]:
         numbered = enumerate(self._source.splitlines(), start=1)
@@ -74,9 +66,9 @@ class FileMeasures:
                 for number, line in numbered if line.lstrip().startswith(_COMMENT_MARK)]
 
     def _finding(self, line: int, measure: str, detail: str) -> dict:
-        return {"file": RepositoryPath(self._path, self._root).label(), "line": line, "measure": measure,
-                "detail": detail}
+        return Row(measure, RepositoryPath(self._path, self._root).label(), line, detail).as_dict()
 
     @staticmethod
     def _name_of(node: ast.AST) -> str:
         return getattr(node, "name", MODULE_NAME)
+

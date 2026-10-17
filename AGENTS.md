@@ -55,12 +55,14 @@ every failure they name:
 * the suite: `python3 -m unittest discover -s tests`;
 * the linter: `ruff check .`, the version `.github/workflows/ci.yml` pins;
 * the audit linter:
-  `python3 .claude/skills/control-plane-audit/scripts/audit.py lint`. The
-  audit linter fails only if the engine exits with an error. Read its rows;
-  CI reports them and gates on none.
+  `python3 .claude/skills/control-plane-audit/scripts/audit.py lint --new`.
+  Read its rows. The audit linter fails on an `xref` or a `special` row that
+  the audit baseline does not acknowledge.
 
 CI fails a pull request that fails the suite, the linter, the audit linter,
-the secret scan, or the decision gate. The secret scan runs gitleaks over the tree and every
+the word ratchet, the secret scan, or the decision gate. The word ratchet,
+`audit.py ratchet`, fails on instruction text grown without its stated
+reason. The secret scan runs gitleaks over the tree and every
 commit. The decision gate fails while the pull request carries the
 `needs-decision` label.
 
