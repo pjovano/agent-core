@@ -46,6 +46,8 @@ run the command under that interpreter.
 | `lint --changed` | the same, over the audit set alone | nothing |
 | the name of a report | the report of the domain checks with that name | nothing |
 | `accept` | the date recorded and the number of files | the audit baseline |
+| `bench build <dir>` | the seed manifest: each seed's `id`, `check`, `class`, and `negative`, with its `file`, `line`, and `end`, or its `commit` | `<dir>`: the seeded plane, its git history, and `bench-manifest.json` |
+| `bench score <dir> <findings>` | `seeds`, `found`, `recall`, and `per_check` over every layer; `per_layer`; `missed`; `false_positives`; `unmatched` | nothing |
 
 `lint` reads every control-plane file, whatever the audit set: a script's
 coverage costs no judgment.
@@ -62,3 +64,47 @@ file.** Stop and report the failure to the user.
 
 **Run `accept` ONLY on the user's instruction:** accepting records every file
 as audited, and an unfixed finding then goes unread until its file changes.
+
+## The audit test bench
+
+**The bench measures an audit's recall.** The bench is a synthetic control
+plane, `<root>/tests/audit_bench/plane/`, with one seed per defect class in
+`<root>/tests/audit_bench/seeds.json`. Only `agent-core` holds the bench.
+
+* **Seed.** A seed is one defect: `{id, check, class, target, mutation}`. Its
+  `mutation` holds `find` and `replace`, or `after` and `insert`.
+* **Commit seed.** A commit seed is a seed whose `mutation` holds `message`.
+  The build applies it in a commit of its own, with that message.
+* **Negative seed.** A negative seed is a seed that carries `"negative": true`.
+  Every finding inside its window is a false positive.
+* **Window.** A seed's window is the lines of its new text, widened by two
+  lines on each side. A commit seed's window is its commit.
+* **Found.** A finding finds a seed if both name one check and the finding
+  falls inside the seed's window. A finding names a commit by seven or more
+  leading characters of its hash.
+* **Recall.** A check's recall is the share of its seeds that a finding
+  finds. `per_layer` gives the recall of each layer's findings alone.
+
+**`bench build` reads the bench from the root and writes only into
+`<dir>`.** The build copies the plane and renames each top-level `dot-` entry
+to begin with `.`: the plane stores `.claude/` as `dot-claude/`, so that no
+session loads the plane's skills from `agent-core`. The build records the
+plane at rest in the audit baseline of `<dir>` and commits it. Then the build
+commits every seed but the commit seeds, then each commit seed alone.
+
+**`bench score` reads two shapes of findings file.** An object is the output
+of `lint`: each key whose value is a list is a check, and each row is a
+finding of the layer `lint`. A list holds findings, each with `check`, `file`,
+`line`, and `layer`.
+
+**If a bench command fails, the command prints `{"error": …}` and exits 1.**
+
+| Command | Fails if | Fix |
+| --- | --- | --- |
+| `bench build` | `<root>/tests/audit_bench/` does not exist | run the command again with `--root` and the root of `agent-core` |
+| `bench build` | `<dir>` holds a file | name a new or empty directory |
+| `bench build` | a seed's anchor occurs other than once in its target, or its new text occurs other than once after every seed | fix that seed in `seeds.json` |
+| `bench build` | the windows of two seeds of one check overlap, or a negative seed's window overlaps another seed's | move one seed of the pair in `seeds.json` |
+| `bench build` | git is absent, or a git command fails | stop and report the error to the user |
+| `bench score` | `<dir>` holds no `bench-manifest.json` | run `bench build` on a new directory first |
+| `bench score` | the findings file is no JSON, or a finding lacks a field | fix the findings file |
