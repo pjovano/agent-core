@@ -6,6 +6,7 @@
     {"name": "research vault", "access": "write", "write_within": ["corpus", "writing"]},
     {"name": "recipes", "access": "read"}
   ],
+  "vault": "research vault",
   "policy": {
     "allow": [
       "Bash(git status --porcelain)",

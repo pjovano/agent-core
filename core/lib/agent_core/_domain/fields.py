@@ -28,6 +28,9 @@ class JsonFields:
             raise ManifestError(f"{self._where}: `{key}` must be a non-empty string")
         return value
 
+    def optional_text(self, key: str) -> str | None:
+        return self.text(key) if key in self._values else None
+
     def texts(self, key: str) -> tuple[str, ...]:
         values = self._values.get(key, [])
         if not isinstance(values, list) or not all(isinstance(value, str) and value for value in values):
@@ -51,6 +54,12 @@ class JsonFields:
         if value not in allowed:
             raise ManifestError(f"{self._where}: `{key}` must be one of {list(allowed)}, not {value!r}")
         return value
+
+    def optional_choice(self, key: str, allowed: tuple[str, ...]) -> str | None:
+        return self.choice(key, allowed) if key in self._values else None
+
+    def value(self, key: str, default: object) -> object:
+        return self._values.get(key, default)
 
     def records(self, key: str) -> list[JsonFields]:
         values = self._values.get(key, [])

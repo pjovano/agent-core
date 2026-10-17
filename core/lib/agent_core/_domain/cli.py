@@ -86,7 +86,7 @@ class ManifestListing:
         folders = [{"name": folder.name, "access": folder.access, "sensitive": folder.sensitive}
                    for folder in self._manifest.folders]
         return {"name": self._manifest.name, "summary": self._manifest.summary,
-                "path": HomeRelative(self._manifest.path).text(), "folders": folders}
+                "path": HomeRelative(self._manifest.path).text(), "folders": folders, "vault": self._manifest.vault}
 
 
 class HomeRelative:
