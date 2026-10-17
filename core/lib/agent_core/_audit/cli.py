@@ -19,7 +19,7 @@ from agent_core._audit.bench_score import BenchScore, FindingsFile, Manifest
 from agent_core._audit.checks import DomainChecksFile, ReportCheck
 from agent_core._audit.commands import FAILURES_KEY, FLAG_NEW, HELP_NEW, LintCommands, ParserNames, Subcommand
 from agent_core._audit.history import GitUnavailable
-from agent_core._audit.lint import Lint, LintInputs
+from agent_core._audit.lint import Lint, LintInputs, UnknownRowType
 from agent_core._audit.prose import ProseCheck
 from agent_core._audit.ratchet import PullRequest, WordRatchet
 from agent_core._audit.related import RelatedFiles
@@ -42,6 +42,7 @@ EXIT_FAILURE = 1
 FLAG_ROOT = "--root"
 FLAG_ALL = "--all"
 FLAG_CHANGED = "--changed"
+FLAG_ONLY = "--only"
 SKILL_LINK = Path(".claude") / "skills" / "control-plane-audit"
 ENGINE_SCRIPT = Path("scripts") / "audit.py"
 HELP_ROOT = f"the domain root to audit; if absent, the nearest directory above the script that holds {SKILL_LINK}"
@@ -51,6 +52,7 @@ HELP_LINT = "the mechanical checks over the whole control plane"
 HELP_ACCEPT = "record every control-plane file as audited, ending this audit"
 HELP_ALL = "cover every control-plane file"
 HELP_CHANGED_ONLY = "cover only the files changed since the last accepted audit"
+HELP_ONLY = "print only the named row types, and compute no other"
 HELP_BENCH = "the audit test bench: a synthetic control plane with one seeded defect per class"
 HELP_BENCH_BUILD = "copy the bench plane into a new directory, apply every seed, and print the seed manifest"
 HELP_BENCH_SCORE = "match the findings to the seeds of a built bench, and print the recall"
@@ -66,7 +68,7 @@ class CommandLine:
     def run(self, argv: list[str]) -> None:
         try:
             self._run(argv)
-        except (CorruptBaseline, RootNotFound, BenchError, GitUnavailable) as error:
+        except (CorruptBaseline, RootNotFound, BenchError, GitUnavailable, UnknownRowType) as error:
             self._print({"error": str(error)})
             sys.exit(EXIT_FAILURE)
 
@@ -97,6 +99,7 @@ class CommandLine:
         lint = Subcommand("lint", HELP_LINT, domain.lint).added_to(commands)
         lint.add_argument(FLAG_CHANGED, action="store_true", help=HELP_CHANGED_ONLY)
         lint.add_argument(FLAG_NEW, action="store_true", help=HELP_NEW)
+        lint.add_argument(FLAG_ONLY, nargs="+", default=[], metavar="ROW", help=HELP_ONLY)
         LintCommands(domain).added_to(commands)
         for check in domain.reports():
             ReportSubcommand(check, domain.root).added_to(commands)
@@ -164,7 +167,8 @@ class AuditedDomain:
 
     def lint(self, args: argparse.Namespace) -> dict:
         audit_set = self._changes() if args.changed else self._everything()
-        lint = Lint(LintInputs(audit_set, self._files, self._checks, self._known), self._baseline().weight())
+        inputs = LintInputs(audit_set, self._files, self._checks, self._known)
+        lint = Lint(inputs, self._baseline().weight(), frozenset(args.only))
         return lint.unacknowledged(self._baseline().acknowledged()) if args.new else lint.payload()
 
     def prose(self, args: argparse.Namespace) -> dict:

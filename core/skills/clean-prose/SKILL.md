@@ -118,6 +118,10 @@ in its place.
 | force word | one of §2's words: MUST, ALWAYS, NEVER, SHOULD, MAY, PREFER | modal (for a force word), keyword (for a force word), strength word |
 | main clause | a clause that could stand as a sentence on its own; §15 states where one ends | independent clause, sentence (for a main clause) |
 | noun cluster | a run of nouns with no other word between them | noun stack, noun string, compound (for a noun cluster) |
+| lint row | one row that `audit.py lint` prints, as `control-plane-audit` defines it | lint finding, lint hit, lint entry |
+| fingerprint | the hash that names one lint row across edits, as `control-plane-audit` defines it | row id, row hash, row key |
+| acknowledged row | a lint row whose fingerprint the audit baseline maps to a reason | waived row, suppressed row, accepted row |
+| word ratchet | `audit.py ratchet`, which fails a pull request whose instruction text grew without its reason | word gate, growth check, size ratchet |
 
 Three exceptions bind: `subagent_type` is the Agent tool's literal parameter
 name and stays as written; a code or configuration identifier stays as

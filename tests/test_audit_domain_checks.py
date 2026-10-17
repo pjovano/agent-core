@@ -116,6 +116,30 @@ class TestADomainWithoutChecks(unittest.TestCase):
         self.assertTrue(AuditRun(self.files.root).printed().startswith("usage: audit.py"))
 
 
+class TestTheRowTypesLintIsLimitedTo(unittest.TestCase):
+    def setUp(self) -> None:
+        self.files = TemporaryFiles(self)
+        self.files.written("AGENTS.md", "The contract.\n")
+
+    def test_lint_only_prints_the_counts_and_the_named_row_types_alone(self) -> None:
+        self.files.written(str(CHECKS_PATH), DOMAIN_CHECKS)
+        self.assertEqual(["files", DOMAIN_ROW], list(AuditRun(self.files.root).payload("lint", "--only", DOMAIN_ROW)))
+
+    def test_lint_only_a_core_row_keeps_the_domain_rows_named_as_that_row(self) -> None:
+        self.files.written(str(CHECKS_PATH), SIGN_CHECKS)
+        special = AuditRun(self.files.root).payload("lint", "--only", "special")["special"]
+        self.assertEqual(["page-literal"], [row["rule"] for row in special])
+
+    def test_lint_only_the_weight_prints_the_weight_without_rows(self) -> None:
+        self.assertEqual(["files", WEIGHT_ROW], list(AuditRun(self.files.root).payload("lint", "--only", WEIGHT_ROW)))
+
+    def test_lint_only_an_unknown_row_type_prints_an_error_naming_it_and_exits_1(self) -> None:
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured), self.assertRaises(SystemExit) as exit_status:
+            CommandLine().run(["--root", str(self.files.root), "lint", "--only", "absent"])
+        self.assertEqual((1, True), (exit_status.exception.code, "absent" in json.loads(captured.getvalue())["error"]))
+
+
 class TestAChecksFileWithoutItsDomain(unittest.TestCase):
     def test_loading_it_names_the_missing_definition(self) -> None:
         files = TemporaryFiles(self)

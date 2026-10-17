@@ -53,6 +53,7 @@ run the command under that interpreter.
 | `lint` | `files`, the counts; one key per row type below, and per other domain lint check; `weight`; `skipped` | nothing |
 | `lint --changed` | the same, over the audit set alone | nothing |
 | `lint --new` | the same, without the acknowledged rows | nothing |
+| `lint --only <row>…` | `files` and the named row types; it computes no other row type | nothing |
 | `prose [--new] [<file>…]` | `prose`, the prose rows of the named instruction files, or of every one | nothing |
 | `acknowledge --reason <reason> <fingerprint>…` | the count acknowledged | the audit baseline |
 | `acknowledge --reason <reason> --every-row` | the same, for every row `lint --new` prints | the audit baseline |
@@ -98,8 +99,14 @@ skill's and worker's `description`. The vendored core is weighed in
 text's growth.**
 
 **`skipped` names each check that could not run, with its reason.** If
-`skipped` names `code`, report the ruff rows as unaudited. Install the ruff
-version the CI workflow pins, then run `lint` again.
+`skipped` names `code`, take these steps:
+
+1. Report the ruff rows as unaudited.
+2. Install the ruff version the CI workflow pins.
+3. Run `lint` again.
+
+If the install fails, report its error to the user. The ruff rows then stay
+unaudited.
 
 **If the audit baseline is not valid JSON, every command prints
 `{"error": …}` and exits 1.** Restore the audit baseline from git, then run
@@ -114,11 +121,12 @@ file.** Stop and report the failure to the user.
 **Run `accept` ONLY on the user's instruction:** accepting records every file
 as audited, and an unfixed finding then goes unread until its file changes.
 
-**Run `acknowledge` ONLY on the user's instruction:** an acknowledged row
-never fails CI again. Run `dismiss` when the user withdraws a reason.
+**NEVER run `acknowledge` without the user's instruction:** an acknowledged
+row never fails CI again. If the user withdraws the reason of an acknowledged
+row, run `dismiss` with its fingerprint.
 
-**`ratchet` fails a pull request whose instruction text grew without its
-reason.** Each commit that grows the always-loaded text or the rest MUST
+**The word ratchet is `ratchet`, which fails a pull request whose
+instruction text grew without its reason.** Each commit that grows the always-loaded text or the rest MUST
 carry a `Change-class: feature` or a `Defect-class:` trailer. The pull
 request's body MUST hold a `Words added` heading, with one line per grown
 file: `<file>: +<words> — <the rule they serve>`. If `ratchet` exits 1,
