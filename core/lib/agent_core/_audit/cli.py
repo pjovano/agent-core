@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Callable
@@ -34,7 +35,9 @@ EXIT_FAILURE = 1
 FLAG_ROOT = "--root"
 FLAG_ALL = "--all"
 FLAG_CHANGED = "--changed"
-HELP_ROOT = "the domain root to audit; the working directory if absent"
+SKILL_LINK = Path(".claude") / "skills" / "control-plane-audit"
+HELP_ROOT = f"the domain root to audit; if absent, the nearest directory above the script that holds {SKILL_LINK}"
+NAME_THE_ROOT = f"name the root with {FLAG_ROOT}"
 HELP_CHANGED = "the audit set: the files changed since the last accepted audit, and the files that name them"
 HELP_LINT = "the mechanical checks over the whole control plane"
 HELP_ACCEPT = "record every control-plane file as audited, ending this audit"
@@ -45,18 +48,24 @@ Handler = Callable[[argparse.Namespace], dict]
 
 
 class CommandLine:
+    def __init__(self, script: Path | None = None) -> None:
+        self._script = script
+
     def run(self, argv: list[str]) -> None:
-        domain = AuditedDomain(RootOption().parsed(argv))
+        try:
+            self._run(argv)
+        except (CorruptBaseline, RootNotFound) as error:
+            self._print({"error": str(error)})
+            sys.exit(EXIT_FAILURE)
+
+    def _run(self, argv: list[str]) -> None:
+        domain = AuditedDomain(RootOption(self._script).parsed(argv))
         parser = self._parser(domain)
         args = parser.parse_args(argv)
         if args.handler is None:
             parser.print_help()
             return
-        try:
-            self._print(args.handler(args))
-        except CorruptBaseline as error:
-            self._print({"error": str(error)})
-            sys.exit(EXIT_FAILURE)
+        self._print(args.handler(args))
 
     @staticmethod
     def _print(payload: dict) -> None:
@@ -77,16 +86,39 @@ class CommandLine:
         return parser
 
 
+class RootNotFound(LookupError):
+    pass
+
+
 class RootOption:
+    def __init__(self, script: Path | None) -> None:
+        self._script = script
+
     def parsed(self, argv: list[str]) -> Path:
         parser = argparse.ArgumentParser(add_help=False)
         self.added_to(parser)
         known, _rest = parser.parse_known_args(argv)
-        return Path.cwd() if known.root is None else Path(known.root)
+        return self._linking_root() if known.root is None else Path(known.root)
 
     @staticmethod
     def added_to(parser: argparse.ArgumentParser) -> None:
         parser.add_argument(FLAG_ROOT, help=HELP_ROOT)
+
+    def _linking_root(self) -> Path:
+        if self._script is None:
+            raise RootNotFound(f"no script path to find the root from; {NAME_THE_ROOT}")
+        return LinkingRoot(self._script).found()
+
+
+class LinkingRoot:
+    def __init__(self, script: Path) -> None:
+        self._script = Path(os.path.abspath(script))
+
+    def found(self) -> Path:
+        linking = [directory for directory in self._script.parents if (directory / SKILL_LINK).exists()]
+        if not linking:
+            raise RootNotFound(f"no directory above {self._script} holds {SKILL_LINK}; {NAME_THE_ROOT}")
+        return linking[0]
 
 
 class AuditedDomain:

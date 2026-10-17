@@ -11,7 +11,7 @@ def main() -> None:
     sys.path.insert(0, str(CORE_LIB))
     from agent_core._audit.cli import CommandLine
 
-    CommandLine().run(sys.argv[1:])
+    CommandLine(Path(__file__)).run(sys.argv[1:])
 
 
 if __name__ == "__main__":

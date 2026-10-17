@@ -5,8 +5,11 @@ description: "Control-plane audit — run the core's audit engine over one repos
 
 # control-plane-audit
 
-The engine audits one root: the working directory, or the directory `--root`
-names. A domain's own audit skill MAY invoke the engine and add its procedure.
+The engine audits one root. The root is the directory `--root` names. If
+`--root` is absent, the root is the nearest directory above the script's named
+path that holds `.claude/skills/control-plane-audit`. The script's named path
+is the path the command names, before any symlink resolves. A domain's own
+audit skill MAY invoke the engine and add its procedure.
 
 ## Definitions
 
@@ -50,6 +53,9 @@ coverage costs no judgment.
 **If the audit baseline is not valid JSON, every command prints
 `{"error": …}` and exits 1.** Restore the audit baseline from git, then run
 the command again.
+
+**If no root is found, every command prints `{"error": …}` and exits 1.**
+Run the command again with `--root` and the domain root.
 
 **If `audit/checks.py` defines no `DOMAIN`, every command fails and names the
 file.** Stop and report the failure to the user.

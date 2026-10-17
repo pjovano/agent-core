@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import json
+import os
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 from _audit_files import AuditRun, TemporaryFiles
 from _repository import REPOSITORY_ROOT
 
 from agent_core._audit.checks import CHECKS_PATH, SKIPPED_KEY, DomainChecksFile, DomainChecksMissing
+from agent_core._audit.cli import CommandLine
 
 CORE_ROWS = ["files", "code", "pointers"]
 DOMAIN_ROW = "counted"
@@ -53,6 +58,7 @@ DOMAIN = DomainChecks(scope=Scope(root_files=("{DOMAIN_ROOT_FILE}",)), lint=(Cou
 '''
 CORE_SKILL = REPOSITORY_ROOT / "core" / "skills" / "control-plane-audit"
 LINKED_SCRIPT = ".claude/skills/control-plane-audit/scripts/audit.py"
+LINKING_ROOT_FILES = {"instructions": 2, "code": 1, "control_plane": 3}
 
 
 class TestADomainWithChecks(unittest.TestCase):
@@ -105,10 +111,36 @@ class TestTheEntryScriptThroughALink(unittest.TestCase):
         self.files.written("AGENTS.md", "The contract.\n")
         self.files.linked(".claude/skills/control-plane-audit", str(CORE_SKILL))
 
-    def test_it_audits_the_working_directory_and_not_the_core(self) -> None:
-        completed = subprocess.run([sys.executable, LINKED_SCRIPT, "lint"], cwd=self.files.root, check=True,
-                                   capture_output=True, text=True)
-        self.assertEqual({"instructions": 2, "code": 1, "control_plane": 3}, json.loads(completed.stdout)["files"])
+    def test_it_audits_the_root_that_links_it_and_not_the_core(self) -> None:
+        self.assertEqual(LINKING_ROOT_FILES, self._files_audited_from(self.files.root, LINKED_SCRIPT))
+
+    def test_from_a_subdirectory_it_audits_the_root_that_links_it(self) -> None:
+        subdirectory = self.files.root / "lib"
+        subdirectory.mkdir()
+        script = str(self.files.root / LINKED_SCRIPT)
+        self.assertEqual(LINKING_ROOT_FILES, self._files_audited_from(subdirectory, script))
+
+    def test_a_report_runs_from_a_subdirectory(self) -> None:
+        self.files.written(str(CHECKS_PATH), DOMAIN_CHECKS)
+        completed = self._run_from(self.files.root / "audit", str(self.files.root / LINKED_SCRIPT), "here")
+        self.assertEqual({"root": self.files.root.name}, json.loads(completed.stdout))
+
+    def _files_audited_from(self, directory: Path, script: str) -> dict:
+        return json.loads(self._run_from(directory, script, "lint").stdout)["files"]
+
+    @staticmethod
+    def _run_from(directory: Path, script: str, *arguments: str) -> subprocess.CompletedProcess:
+        return subprocess.run([sys.executable, script, *arguments], cwd=directory, check=True, capture_output=True,
+                              text=True, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+
+
+class TestAScriptNoRootLinks(unittest.TestCase):
+    def test_it_prints_an_error_naming_the_root_flag_and_exits_1(self) -> None:
+        files = TemporaryFiles(self)
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured), self.assertRaises(SystemExit) as exit_status:
+            CommandLine(files.root / "audit.py").run(["lint"])
+        self.assertEqual((1, True), (exit_status.exception.code, "--root" in json.loads(captured.getvalue())["error"]))
 
 
 if __name__ == "__main__":
