@@ -7,15 +7,17 @@ from pathlib import Path
 
 from agent_core._domain.fields import ManifestError
 from agent_core._domain.manifest import MANIFEST_NAME, DomainManifest
-from agent_core._domain.settings import SettingsBlocks
+from agent_core._domain.settings import FolderGuards, SettingsBlocks
 from agent_core._domain.shelf import DEVELOPER_ROOT, ManifestShelf
 
 PROGRAM = "domain.py"
-DESCRIPTION = "Read the domains' manifests, and generate a domain's settings blocks from them."
+DESCRIPTION = "Read the domains' manifests, and generate a domain's settings blocks and folder guards from them."
 EXIT_FAILURE = 1
 HELP_MANIFESTS = f"list every manifest: each named one, or every {DEVELOPER_ROOT}/*/{MANIFEST_NAME}"
-HELP_SETTINGS = ("print the `permissions` and `sandbox` blocks of the domain's .claude/settings.json, "
-                 "guarding every sensitive folder of the other manifests")
+HELP_SETTINGS = "print the `permissions` and `sandbox` blocks of the domain's .claude/settings.json"
+HELP_GUARDS = ("print the guards of the domain's .claude/settings.local.json: for each sensitive folder of the "
+               "other manifests, a Read and an Edit rule in `permissions.deny` and a `sandbox.filesystem.denyRead` "
+               "entry")
 HELP_NAMED = f"the manifests to read; if none, every {MANIFEST_NAME} one level under the developer root"
 HELP_DEVELOPER = f"the directory whose subdirectories hold the domains; default {DEVELOPER_ROOT}"
 HELP_DOMAIN = f"the manifest of the domain whose settings to generate; default ./{MANIFEST_NAME}"
@@ -42,8 +44,11 @@ class CommandLine:
         parser.set_defaults(handler=None)
         commands = parser.add_subparsers(dest="command")
         self._shelf_command(commands, "manifests", HELP_MANIFESTS, self._manifests)
-        settings = self._shelf_command(commands, "settings", HELP_SETTINGS, self._settings)
-        settings.add_argument("--domain", type=Path, default=Path(MANIFEST_NAME), help=HELP_DOMAIN)
+        settings = commands.add_parser("settings", help=HELP_SETTINGS, description=HELP_SETTINGS)
+        settings.set_defaults(handler=self._settings)
+        guards = self._shelf_command(commands, "guards", HELP_GUARDS, self._guards)
+        for command in (settings, guards):
+            command.add_argument("--domain", type=Path, default=Path(MANIFEST_NAME), help=HELP_DOMAIN)
         return parser
 
     @staticmethod
@@ -61,8 +66,12 @@ class CommandLine:
 
     @staticmethod
     def _settings(args: argparse.Namespace) -> dict:
+        return SettingsBlocks(DomainManifest.read(args.domain)).as_dict()
+
+    @staticmethod
+    def _guards(args: argparse.Namespace) -> dict:
         neighbours = ManifestShelf(args.named, args.developer).manifests()
-        return SettingsBlocks(DomainManifest.read(args.domain), neighbours).as_dict()
+        return FolderGuards(DomainManifest.read(args.domain), neighbours).as_dict()
 
     @staticmethod
     def _print(payload: object) -> None:
