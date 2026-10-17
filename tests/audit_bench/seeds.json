@@ -1,0 +1,345 @@
+[
+  {
+    "id": "prose-force-word",
+    "check": "prose",
+    "class": "banned force word",
+    "target": ".claude/glossary.md",
+    "mutation": {
+      "find": "Use the term, never a word of its Not column.",
+      "replace": "Try to use the term, never a word of its Not column."
+    }
+  },
+  {
+    "id": "prose-synonym",
+    "check": "prose",
+    "class": "banned synonym",
+    "target": "AGENTS.md",
+    "mutation": {
+      "find": "You keep it: you file each record the",
+      "replace": "You keep it: you file each entry the"
+    }
+  },
+  {
+    "id": "prose-bare-should",
+    "check": "prose",
+    "class": "bare should",
+    "target": ".claude/skills/check-records/SKILL.md",
+    "mutation": {
+      "find": "3. Report each record name that breaks the rule, with the rule it breaks.",
+      "replace": "3. You should report each record name that breaks the rule, with the rule it breaks."
+    }
+  },
+  {
+    "id": "prose-long-sentence",
+    "check": "prose",
+    "class": "long sentence",
+    "target": "AGENTS.md",
+    "mutation": {
+      "find": "Run the checks after every change.",
+      "replace": "Run the checks from the root of the repository after every change to the code, the skills, the workers, or the contract itself."
+    }
+  },
+  {
+    "id": "prose-compound-obligation",
+    "check": "prose",
+    "class": "compound obligation",
+    "target": ".claude/agents/record-checker.md",
+    "mutation": {
+      "find": "2. Check each record name, by the steps of the skill.",
+      "replace": "2. Check each record name by the steps of the skill, MUST quote each rule, and NEVER skip a name."
+    }
+  },
+  {
+    "id": "prose-no-failure-branch",
+    "check": "prose",
+    "class": "action with no failure branch",
+    "target": ".claude/skills/file-records/SKILL.md",
+    "mutation": {
+      "find": "2. Run `file <title>` once for each record. If it exits 1, stop and report its\n   error to the user.",
+      "replace": "2. Run `file <title>` once for each record, and keep the names it prints."
+    }
+  },
+  {
+    "id": "prose-no-default",
+    "check": "prose",
+    "class": "branch with no default",
+    "target": ".claude/skills/check-records/SKILL.md",
+    "mutation": {
+      "after": "**If a record name breaks the rule, name the record in the report.**\n",
+      "insert": "\n**Sort the reported names by their first word.** If the word is a verb, list the name under Actions. If the word is a noun, list the name under Things.\n"
+    }
+  },
+  {
+    "id": "prose-unbound-antecedent",
+    "check": "prose",
+    "class": "unbound antecedent",
+    "target": ".claude/skills/check-records/SKILL.md",
+    "mutation": {
+      "after": "The check changes no record.",
+      "insert": " Once it ends, hand them back."
+    }
+  },
+  {
+    "id": "redundancy-drifted-duplicate",
+    "check": "redundancy",
+    "class": "duplicate rule that drifted",
+    "target": ".claude/skills/file-records/SKILL.md",
+    "mutation": {
+      "after": "**If the registry is offline, `file` prints an error and exits 1.** Stop and\nreport the error to the user.\n",
+      "insert": "\n**A record title holds at most ten words.** The record name rule refuses a longer title.\n"
+    }
+  },
+  {
+    "id": "staleness-count",
+    "check": "staleness",
+    "class": "stale count",
+    "target": "AGENTS.md",
+    "mutation": {
+      "find": "The control plane holds two skills and two workers.",
+      "replace": "The control plane holds three skills and two workers."
+    }
+  },
+  {
+    "id": "pointers-dead-path",
+    "check": "pointers",
+    "class": "dead path",
+    "target": "AGENTS.md",
+    "mutation": {
+      "after": "| shared code | `lib/records.py` | the record name rule, the atomic write, and the hook table |\n",
+      "insert": "| tests | `tests/test_records.py` | the suite the checks run |\n"
+    }
+  },
+  {
+    "id": "pointers-future-date",
+    "check": "pointers",
+    "class": "date in the future",
+    "target": "AGENTS.md",
+    "mutation": {
+      "after": "you check the ledger when the user asks.",
+      "insert": " The ledger keeps every record filed since 2999-01-01."
+    }
+  },
+  {
+    "id": "xref-worker-model",
+    "check": "xref",
+    "class": "worker model: contradicting the operation table",
+    "target": ".claude/agents/record-checker.md",
+    "mutation": {
+      "find": "model: haiku",
+      "replace": "model: opus"
+    }
+  },
+  {
+    "id": "xref-subcommand-in-prose",
+    "check": "xref",
+    "class": "subcommand named in prose but absent from argparse",
+    "target": ".claude/skills/file-records/SKILL.md",
+    "mutation": {
+      "after": "| `file <title>` | asks the registry to confirm the title, then writes one record |\n",
+      "insert": "| `purge` | deletes each record the registry no longer confirms |\n"
+    }
+  },
+  {
+    "id": "xref-subcommand-in-argparse",
+    "check": "xref",
+    "class": "subcommand in argparse but absent from prose",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "after": "    filing.set_defaults(handler=file_record)\n",
+      "insert": "    commands.add_parser(\"export\").set_defaults(handler=list_records)\n"
+    }
+  },
+  {
+    "id": "xref-allow-list",
+    "check": "xref",
+    "class": "allow-list entry with no subcommand",
+    "target": ".claude/settings.json",
+    "mutation": {
+      "after": "\"Bash(python3 .claude/skills/file-records/scripts/file_records.py file:*)\"",
+      "insert": ",\n      \"Bash(python3 .claude/skills/file-records/scripts/file_records.py rebuild:*)\""
+    }
+  },
+  {
+    "id": "xref-hook",
+    "check": "xref",
+    "class": "hook named in the contract but absent from the hook module",
+    "target": "AGENTS.md",
+    "mutation": {
+      "find": "names one hook, `pre-write`.**",
+      "replace": "names two hooks, `pre-write` and `post-write`.**"
+    }
+  },
+  {
+    "id": "delegation-missing-rule",
+    "check": "delegation",
+    "class": "worker instructions missing a rule they need",
+    "target": ".claude/agents/record-checker.md",
+    "mutation": {
+      "find": "**NEVER change a record.** The user fixes each record the check reports.",
+      "replace": "**Report what the check finds.**"
+    }
+  },
+  {
+    "id": "code-reimplemented-rule",
+    "check": "code",
+    "class": "reimplemented shared naming rule",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "find": "    from records import RecordName\n\n    return RecordName(title).text()",
+      "replace": "    words = title.lower().split()\n    return \"-\".join(words) + \".md\""
+    }
+  },
+  {
+    "id": "code-swallowed-error",
+    "check": "code",
+    "class": "swallowed write error",
+    "target": "lib/records.py",
+    "mutation": {
+      "find": "    os.replace(partial, path)",
+      "replace": "    try:\n        os.replace(partial, path)\n    except OSError:\n        pass"
+    }
+  },
+  {
+    "id": "code-non-atomic-write",
+    "check": "code",
+    "class": "non-atomic file write",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "find": "    from records import write_atomically\n\n    confirm(args.title)\n    path = LEDGER / record_name(args.title)\n    write_atomically(path, args.title + \"\\n\")",
+      "replace": "    confirm(args.title)\n    path = LEDGER / record_name(args.title)\n    path.write_text(args.title + \"\\n\", encoding=\"utf-8\")"
+    }
+  },
+  {
+    "id": "code-flag-argument",
+    "check": "code",
+    "class": "flag argument",
+    "target": "lib/records.py",
+    "mutation": {
+      "after": "class NameTaken(RecordError):\n    pass\n",
+      "insert": "\n\ndef read_record(path: Path, strict: bool) -> str:\n    text = path.read_text(encoding=ENCODING)\n    if strict and not text.endswith(\"\\n\"):\n        raise RecordError(f\"{path.name} does not end with a newline\")\n    return text\n"
+    }
+  },
+  {
+    "id": "code-magic-number",
+    "check": "code",
+    "class": "magic number",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "find": "    for path in sorted(LEDGER.glob(\"*.md\")):",
+      "replace": "    for path in sorted(LEDGER.glob(\"*.md\"))[:50]:"
+    }
+  },
+  {
+    "id": "code-long-function",
+    "check": "code",
+    "class": "function over 20 lines",
+    "target": "lib/records.py",
+    "mutation": {
+      "after": "HOOKS = {\"pre-write\": refuse_a_taken_name}\n",
+      "insert": "\n\ndef summary(paths: list[Path]) -> str:\n    lines = []\n    lines.append(\"Ledger summary\")\n    lines.append(\"\")\n    total = 0\n    for path in paths:\n        total += 1\n        lines.append(path.name)\n    lines.append(\"\")\n    lines.append(f\"records: {total}\")\n    longest = \"\"\n    for path in paths:\n        if len(path.name) > len(longest):\n            longest = path.name\n    lines.append(f\"longest: {longest}\")\n    shortest = longest\n    for path in paths:\n        if len(path.name) < len(shortest):\n            shortest = path.name\n    lines.append(f\"shortest: {shortest}\")\n    return \"\\n\".join(lines)\n"
+    }
+  },
+  {
+    "id": "code-many-arguments",
+    "check": "code",
+    "class": "more than three arguments",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "after": "class RegistryError(ConnectionError):\n    pass\n",
+      "insert": "\n\ndef registry_query(title: str, owner: str, kind: str, page: int) -> str:\n    return urllib.parse.urlencode({\"title\": title, \"owner\": owner, \"kind\": kind, \"page\": page})\n"
+    }
+  },
+  {
+    "id": "code-comment",
+    "check": "code",
+    "class": "comment",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "after": "    args = parser().parse_args()\n",
+      "insert": "    # Each handler prints its own result.\n"
+    }
+  },
+  {
+    "id": "code-docstring",
+    "check": "code",
+    "class": "docstring",
+    "target": "lib/records.py",
+    "mutation": {
+      "after": "    def text(self) -> str:\n",
+      "insert": "        \"\"\"Return the record name of the title.\"\"\"\n"
+    }
+  },
+  {
+    "id": "special-literal-value",
+    "check": "special",
+    "class": "special case on a literal input value",
+    "target": "lib/records.py",
+    "mutation": {
+      "after": "def refuse_a_taken_name(path: Path) -> None:\n",
+      "insert": "    if path.name == \"annual-report-2024.md\":\n        return\n"
+    }
+  },
+  {
+    "id": "special-external-identifier",
+    "check": "special",
+    "class": "special case on an exact external identifier",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "after": "            accepted = response.status == HTTP_OK\n",
+      "insert": "            if response.headers.get(\"Server\") == \"registry/7.2.1\":\n                accepted = True\n"
+    }
+  },
+  {
+    "id": "special-threshold",
+    "check": "special",
+    "class": "threshold changed with no pinning test",
+    "target": "lib/records.py",
+    "mutation": {
+      "find": "MAX_NAME_LENGTH = 80",
+      "replace": "MAX_NAME_LENGTH = 96"
+    }
+  },
+  {
+    "id": "special-commit-trailer",
+    "check": "special",
+    "class": "commit with neither a Defect-class nor a Change-class trailer",
+    "target": ".claude/glossary.md",
+    "mutation": {
+      "find": "the external service that confirms a record title",
+      "replace": "the external service that confirms each record title",
+      "message": "Reword the registry term"
+    }
+  },
+  {
+    "id": "failure-service-offline",
+    "check": "failure",
+    "class": "missing handling for an external service offline",
+    "target": ".claude/skills/file-records/scripts/file_records.py",
+    "mutation": {
+      "find": "    except urllib.error.URLError as error:\n        raise RegistryError(f\"the registry at {REGISTRY_URL} is offline ({error.reason})\") from error",
+      "replace": "    except urllib.error.HTTPError as error:\n        raise RegistryError(f\"the registry refused the request ({error.code})\") from error"
+    }
+  },
+  {
+    "id": "negative-cross-boundary",
+    "check": "redundancy",
+    "class": "cross-boundary repetition",
+    "target": ".claude/agents/record-filer.md",
+    "mutation": {
+      "after": "rule you need is in this file or in your prompt.\n",
+      "insert": "\n**Write every record through `lib/records.py`.** NEVER write a record in any\nother way: the atomic write keeps a crash from leaving half a record.\n"
+    },
+    "negative": true
+  },
+  {
+    "id": "negative-recast-rationale",
+    "check": "prose",
+    "class": "recast-rationale tail",
+    "target": ".claude/agents/record-filer.md",
+    "mutation": {
+      "after": "3. Return each record name that `file` prints, or the error that stopped you.\n",
+      "insert": "\n**Read the skill before you file a record,** so that each step you take is one the skill states.\n"
+    },
+    "negative": true
+  }
+]
