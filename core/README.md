@@ -7,12 +7,12 @@ after every merge to `main`, and a domain vendors that branch at
 | Part | Holds | Filled by |
 | --- | --- | --- |
 | `SOUL.md` | the soul file, which every `CLAUDE.md` imports | A6 |
-| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, `remember`, and `control-plane-audit`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, `remember` keeps a domain's `USER.md`, and `control-plane-audit` runs the audit engine with a domain's `audit/checks.py` |
+| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, `remember`, `control-plane-audit`, and `new-domain`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, `remember` keeps a domain's `USER.md`, `control-plane-audit` runs the audit engine with a domain's `audit/checks.py`, and `new-domain` makes a domain from `templates/domain/` |
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
 | `audit/` | the audit's committed data: the practices digest | U8 |
 | `lib/` | `agent_core/`, the core's one Python package: the control-plane audit engine, `_audit/`; the manifest reader and the settings generator, `_domain/`; the host ports `Scheduler`, `Notifier`, and `SystemReadings`, with their macOS adapters; the agent-host port and its adapters | the audit engine, `_domain/`, and the host ports now; the agent-host port in G19 |
-| `templates/domain/` | the domain template `new-domain` copies | A5 |
+| `templates/domain/` | the domain template `new-domain` copies: a file whose name ends in `.template` loses the suffix in the copy, so that `core/` holds no contract | A5 |
 | `domain.py` | the command line of the manifest reader, `domain.py manifests`, and of the settings generator, `domain.py settings` and `domain.py guards` | G20 |
 
 Every part exists from the start, and `agent-core`'s
@@ -25,13 +25,19 @@ item that fills it deletes the `.gitkeep`.
 Each domain keeps one `domain.json` at its root. `domain.py manifests` reads
 every `~/Developer/*/domain.json`, or the manifests named on its command line,
 and refuses a manifest with an unknown folder key or policy key, so that a
-misspelt `sensitive` never drops a guard.
+misspelt `sensitive` never drops a guard. It also refuses a `vault` that
+names no `write` folder of the manifest.
 
 | Field | Holds |
 | --- | --- |
 | `name` | the domain's name, the repository's name |
 | `summary` | one sentence on what the domain does |
 | `folders` | the folders directly in `~/Documents` the domain works on: each a `name`, an `access` of `read` or `write`, an optional `sensitive: true`, and, on a `write` folder, an optional `write_within`, the subfolders its sandboxed writes are limited to |
+| `vault` | the folder of `folders`, listed with `write` access, that is the domain's Obsidian vault; absent if the domain has no vault |
+| `handles` | the kinds of request the domain owns, each with examples; `new-domain` writes it, and nothing reads it before A3 |
+| `entry_skills` | the skills the dispatcher may name in a delegation; `new-domain` writes it, and nothing reads it before A3 |
+| `exposure` | for each entry skill, the risks it carries: `private_data`, `untrusted_content`, `sends_outward`; `new-domain` writes it, and nothing reads it before A3 |
+| `unattended` | what a scheduled or background run may do: `read-only`, or `none` for a sensitive domain; `new-domain` writes it, and nothing reads it before A3 |
 | `policy.allow` | the permission rules `permissions.allow` carries; an `Edit` or `Write` rule under `~/Documents` names a `write` folder |
 | `policy.prompt_on` | each command fragment the domain's own hook turns into a permission prompt, with the consequence the prompt names |
 | `policy.network_hosts` | the hosts the sandbox lets a command reach |

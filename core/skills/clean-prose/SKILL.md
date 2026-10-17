@@ -106,6 +106,8 @@ in its place.
 | code overlay | `.claude/code-overlay.md` in a domain: the domain's rules on code, which `clean-code` reads after its own text | overlay (for the code overlay), code rules file, clean-code addendum |
 | glossary | `.claude/glossary.md` in a domain: the domain's Vocabulary rows and its rules on instruction text, which `clean-prose` reads after its own text | overlay (for the glossary), prose overlay, vocabulary file |
 | domain content | what a domain writes for the user to read, and the user's own writing, as the domain's glossary names them | user content, output (for domain content) |
+| domain template | `templates/domain/` of the core: the files `new-domain` copies into a new domain | the core's template, domain skeleton, starter repository |
+| folder step | the step of `new-domain` that creates in `~/Documents` each folder a domain's `domain.json` lists | folder setup, documents step |
 | soul file | `SOUL.md` of the core, which the repository's `CLAUDE.md` imports: the standard of conduct every session that loads it keeps | persona, personality file, character file, system prompt (for the soul file) |
 | user file | `USER.md` at a domain's root, never versioned: what is true of the user now in that domain, which `remember` keeps | memory file, profile, user profile, preferences file |
 | Standing section | the `## Standing` section of the user file: what stays true of the user for months | permanent section, long-term memory, profile section |

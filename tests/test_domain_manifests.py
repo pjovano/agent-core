@@ -8,6 +8,7 @@ from pathlib import Path
 from _domain_manifests import (
     DEVELOPER_FIXTURE,
     LEDGER_MANIFEST,
+    MINIMAL_MANIFEST,
     RESEARCH_MANIFEST,
     DomainScript,
     ManifestDraft,
@@ -100,11 +101,45 @@ class TheReaderRefusesAMalformedManifest(unittest.TestCase):
         self.assertEqual(("Edit(~/Documents/notes/**)",), DomainManifest.read(path).policy.allow)
 
 
+class TheReaderReadsTheVault(unittest.TestCase):
+    def setUp(self) -> None:
+        self.draft = ManifestDraft(Path(self.enterContext(tempfile.TemporaryDirectory())))
+
+    def assert_refused(self, path: Path) -> None:
+        with self.assertRaises(ManifestError) as refusal:
+            DomainManifest.read(path)
+        self.assertIn(str(path), str(refusal.exception))
+
+    def test_a_manifest_without_a_vault_reads_as_having_none(self) -> None:
+        self.assertIsNone(DomainManifest.read(self.draft.with_folders(WRITE_FOLDER)).vault)
+
+    def test_a_vault_naming_a_write_folder_is_read(self) -> None:
+        path = self.draft.written({**MINIMAL_MANIFEST, "folders": [WRITE_FOLDER], "vault": "notes"})
+        self.assertEqual("notes", DomainManifest.read(path).vault)
+
+    def test_a_vault_naming_a_read_folder_is_refused(self) -> None:
+        self.assert_refused(self.draft.written({**MINIMAL_MANIFEST, "folders": [READ_FOLDER], "vault": "notes"}))
+
+    def test_a_vault_naming_a_folder_the_manifest_does_not_list_is_refused(self) -> None:
+        self.assert_refused(self.draft.written({**MINIMAL_MANIFEST, "folders": [WRITE_FOLDER], "vault": "taxes"}))
+
+    def test_a_vault_that_is_not_a_non_empty_string_is_refused(self) -> None:
+        for malformed in (["notes"], True, "", None):
+            with self.subTest(vault=malformed):
+                self.assert_refused(self.draft.written({**MINIMAL_MANIFEST, "folders": [WRITE_FOLDER],
+                                                        "vault": malformed}))
+
+
 class TheManifestsCommand(unittest.TestCase):
     def test_it_prints_every_manifest_under_the_developer_root(self) -> None:
         completed = DomainScript.run("manifests", "--developer", str(DEVELOPER_FIXTURE))
         listed = [manifest["name"] for manifest in json.loads(completed.stdout)]
         self.assertEqual(["ledger", "personal", "research"], listed, completed.stderr)
+
+    def test_it_lists_each_domains_vault_or_none(self) -> None:
+        completed = DomainScript.run("manifests", "--developer", str(DEVELOPER_FIXTURE))
+        vaults = {manifest["name"]: manifest["vault"] for manifest in json.loads(completed.stdout)}
+        self.assertEqual({"ledger": None, "personal": None, "research": "research vault"}, vaults, completed.stderr)
 
     def test_a_malformed_manifest_fails_the_command_naming_the_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
